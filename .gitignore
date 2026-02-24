@@ -33,6 +33,7 @@ htmlcov/
 keycrack/web/__pycache__/
 keycrack/__pycache__/
 
-*.txt
+startingplan.txt
 CLAUDE.md
 .claude
+inspiration/

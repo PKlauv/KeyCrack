@@ -6,8 +6,12 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from keycrack.cli import strip_to_alpha, validate_dob
-from keycrack.generator import PersonalInfo, generate_passwords
+from keycrack.generator import (
+    PersonalInfo,
+    generate_passwords_categorized,
+    strip_to_alpha,
+    validate_dob,
+)
 
 app = FastAPI(title="KeyCrack", description="Password awareness tool")
 
@@ -21,10 +25,42 @@ class PasswordRequest(BaseModel):
     pet_name: Optional[str] = None
 
 
-class PasswordResponse(BaseModel):
+class CategoryDetail(BaseModel):
+    label: str
+    description: str
     passwords: list[str]
     count: int
+
+
+class CategorizedPasswordResponse(BaseModel):
+    categories: dict[str, CategoryDetail]
+    top_passwords: list[str]
+    total_count: int
     elapsed_seconds: float
+
+
+CATEGORY_META = {
+    "name_based": {
+        "label": "Name-Based",
+        "description": "Name combinations with common suffixes",
+    },
+    "leet_speak": {
+        "label": "Leet Speak",
+        "description": "Letter substitutions (a=@, e=3, s=$, etc.) with suffixes",
+    },
+    "name_dob": {
+        "label": "Name + DOB",
+        "description": "Name followed by date-of-birth patterns",
+    },
+    "dob_name": {
+        "label": "DOB + Name",
+        "description": "Date-of-birth patterns followed by name",
+    },
+    "dob_only": {
+        "label": "DOB Only",
+        "description": "Date-of-birth patterns with common suffixes",
+    },
+}
 
 
 @app.exception_handler(ValueError)
@@ -37,7 +73,7 @@ async def index():
     return FileResponse(STATIC_DIR / "index.html")
 
 
-@app.post("/generate", response_model=PasswordResponse)
+@app.post("/generate", response_model=CategorizedPasswordResponse)
 async def generate(req: PasswordRequest):
     dob = validate_dob(req.dob)
 
@@ -58,12 +94,24 @@ async def generate(req: PasswordRequest):
     )
 
     start = time.perf_counter()
-    passwords = generate_passwords(info)
+    result = generate_passwords_categorized(info)
     elapsed = time.perf_counter() - start
 
-    sorted_passwords = sorted(passwords)
-    return PasswordResponse(
-        passwords=sorted_passwords,
-        count=len(sorted_passwords),
+    categories = {}
+    total = 0
+    for key, meta in CATEGORY_META.items():
+        pws = sorted(getattr(result, key))
+        categories[key] = CategoryDetail(
+            label=meta["label"],
+            description=meta["description"],
+            passwords=pws,
+            count=len(pws),
+        )
+        total += len(pws)
+
+    return CategorizedPasswordResponse(
+        categories=categories,
+        top_passwords=result.top_passwords,
+        total_count=total,
         elapsed_seconds=round(elapsed, 4),
     )

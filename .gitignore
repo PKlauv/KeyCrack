@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+
+# Environment
+.env
+.venv/
+env/
+venv/
+
+# IDEs/editors
+.vscode/
+.idea/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Test/output
+*.coverage
+htmlcov/
+*.log
+
+# Static files
+keycrack/web/__pycache__/
+keycrack/__pycache__/
+
+*.txt
+CLAUDE.md
+.claude

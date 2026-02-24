@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyCrack - Password Awareness Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0f1117;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+            color: #fff;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #1a1d27;
+            border: 1px solid #2a2d3a;
+            border-radius: 8px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-bottom: 0.3rem;
+            margin-top: 1rem;
+        }
+
+        label:first-of-type { margin-top: 0; }
+
+        input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: #12141c;
+            border: 1px solid #2a2d3a;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 0.95rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #5b8def;
+        }
+
+        .optional { color: #666; font-size: 0.8rem; }
+
+        button {
+            margin-top: 1.5rem;
+            width: 100%;
+            padding: 0.7rem;
+            background: #5b8def;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        button:hover { background: #4a7de0; }
+        button:disabled { background: #3a3d4a; cursor: not-allowed; }
+
+        .error {
+            margin-top: 1rem;
+            padding: 0.7rem;
+            background: #2d1b1b;
+            border: 1px solid #5a2a2a;
+            border-radius: 4px;
+            color: #e88;
+            display: none;
+        }
+
+        .results {
+            margin-top: 1.5rem;
+            width: 100%;
+            max-width: 480px;
+            display: none;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .stats span { color: #5b8def; font-weight: 600; }
+
+        .password-list {
+            background: #12141c;
+            border: 1px solid #2a2d3a;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+
+        .password-list div {
+            padding: 0.25rem 0.8rem;
+            font-family: "Cascadia Code", "Fira Code", monospace;
+            font-size: 0.85rem;
+        }
+
+        .password-list div:nth-child(even) { background: #161820; }
+
+        .more-note {
+            text-align: center;
+            padding: 0.5rem;
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .privacy {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #555;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>KeyCrack</h1>
+    <p class="subtitle">Password Awareness Tool</p>
+
+    <div class="card">
+        <form id="form">
+            <label for="first_name">First Name</label>
+            <input type="text" id="first_name" required placeholder="John">
+
+            <label for="last_name">Last Name</label>
+            <input type="text" id="last_name" required placeholder="Smith">
+
+            <label for="dob">Date of Birth (MMDDYYYY)</label>
+            <input type="text" id="dob" required placeholder="01151990" maxlength="8">
+
+            <label for="pet_name">Pet Name <span class="optional">(optional)</span></label>
+            <input type="text" id="pet_name" placeholder="Rex">
+
+            <button type="submit" id="btn">Generate Passwords</button>
+        </form>
+        <div class="error" id="error"></div>
+    </div>
+
+    <div class="results" id="results">
+        <div class="stats">
+            <div><span id="count">0</span> passwords generated</div>
+            <div>in <span id="time">0</span>s</div>
+        </div>
+        <div class="password-list" id="password-list"></div>
+    </div>
+
+    <p class="privacy">Nothing is stored. All generation happens in memory and is discarded.</p>
+
+    <script>
+        const DISPLAY_CAP = 200;
+        const form = document.getElementById("form");
+        const btn = document.getElementById("btn");
+        const errorDiv = document.getElementById("error");
+        const resultsDiv = document.getElementById("results");
+        const countSpan = document.getElementById("count");
+        const timeSpan = document.getElementById("time");
+        const passwordList = document.getElementById("password-list");
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorDiv.style.display = "none";
+            resultsDiv.style.display = "none";
+            btn.disabled = true;
+            btn.textContent = "Generating...";
+
+            const body = {
+                first_name: document.getElementById("first_name").value.trim(),
+                last_name: document.getElementById("last_name").value.trim(),
+                dob: document.getElementById("dob").value.trim(),
+            };
+            const pet = document.getElementById("pet_name").value.trim();
+            if (pet) body.pet_name = pet;
+
+            try {
+                const res = await fetch("/generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(body),
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.detail || "Request failed");
+                }
+
+                const data = await res.json();
+                countSpan.textContent = data.count.toLocaleString();
+                timeSpan.textContent = data.elapsed_seconds;
+
+                passwordList.innerHTML = "";
+                const showing = Math.min(DISPLAY_CAP, data.passwords.length);
+                for (let i = 0; i < showing; i++) {
+                    const div = document.createElement("div");
+                    div.textContent = data.passwords[i];
+                    passwordList.appendChild(div);
+                }
+                if (data.count > DISPLAY_CAP) {
+                    const note = document.createElement("div");
+                    note.className = "more-note";
+                    note.textContent = `... and ${(data.count - DISPLAY_CAP).toLocaleString()} more`;
+                    passwordList.appendChild(note);
+                }
+
+                resultsDiv.style.display = "block";
+            } catch (err) {
+                errorDiv.textContent = err.message;
+                errorDiv.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Generate Passwords";
+            }
+        });
+    </script>
+</body>
+</html>

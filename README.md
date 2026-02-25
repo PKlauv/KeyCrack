@@ -47,13 +47,24 @@ KeyCrack is a password awareness tool designed to educate users about the predic
 
 4. Open your browser to [http://localhost:8000](http://localhost:8000)
 
+## Usage
+
+1. **Fill in the form** -- enter your First Name, Last Name, Date of Birth (MMDDYYYY format), and optionally a Pet Name
+2. **Or click a sample template** -- three pre-filled examples (James Wilson, Sarah Miller, Tyler Brooks) let you try it out instantly
+3. **Click GENERATE** -- the app builds thousands of password combinations from your input
+4. **View results** -- see the top 20 most likely passwords with a typing animation, a breakdown chart by category, and expandable sections for all 5 categories (Name-Based, Leet Speak, Name + DOB, DOB + Name, DOB Only)
+
 ## Testing
+
+The test suite includes 42 tests across two files: `test_generator.py` validates the core logic (input parsing, password generation, scoring, and category classification) and `test_api.py` validates the FastAPI endpoints (valid/invalid payloads, response structure, and optional fields). Run them after making changes to the generation logic or API to make sure nothing broke.
 
 ```bash
 python -m pytest tests/ -v
 ```
 
 ## Docker
+
+Docker builds a lightweight container (Python 3.12-slim) with all dependencies baked in, so you don't need Python installed locally. Use it if you want to run the app without setting up a Python environment, or to test that it works in a clean, isolated setup. The container auto-restarts on failure. This same Docker setup is the foundation for deploying the app live (MVP 5) to platforms like Railway, Render, or Fly.io.
 
 ```bash
 docker-compose up --build

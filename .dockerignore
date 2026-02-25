@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+.git/
+tests/
+inspiration/
+*.md
+*.txt
+!requirements.txt
+LICENSE
+.claude/
+htmlcov/
+*.coverage
+.pytest_cache/

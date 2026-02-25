@@ -17,15 +17,18 @@ KeyCrack is a password awareness tool designed to educate users about the predic
 
 - **MVP 0:** Core generation logic (terminal only) -- Done
 - **MVP 1:** Functional web app (FastAPI + HTML form) -- Done
-- **MVP 2:** Hacker-themed UI, loading animation, privacy disclaimer, strength tips -- Done (current)
-- **MVP 3:** Unit tests, Dockerization -- Upcoming
+- **MVP 2:** Hacker-themed UI, loading animation, privacy disclaimer, strength tips -- Done
+- **MVP 3:** Unit tests, Dockerization -- Done (current)
 - **MVP 4:** CI/CD, professional workflow -- Upcoming
+- **MVP 5:** Deployment (live on the internet) -- Upcoming
 
 ## Tech Stack
 
 - Python
 - FastAPI
 - HTML / CSS / JS
+- pytest
+- Docker + docker-compose
 
 ## Setup
 
@@ -43,6 +46,20 @@ KeyCrack is a password awareness tool designed to educate users about the predic
    ```
 
 4. Open your browser to [http://localhost:8000](http://localhost:8000)
+
+## Testing
+
+```bash
+python -m pytest tests/ -v
+```
+
+## Docker
+
+```bash
+docker-compose up --build
+```
+
+Then open [http://localhost:8000](http://localhost:8000)
 
 ## Privacy Disclaimer
 

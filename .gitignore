@@ -37,3 +37,17 @@ startingplan.txt
 CLAUDE.md
 .claude
 inspiration/
+# Pytest
+.pytest_cache/
+
+# mypy
+.mypy_cache/
+
+# SQLite
+*.sqlite3
+
+# Python debugger
+*.pdb
+
+# Extra env files
+*.env

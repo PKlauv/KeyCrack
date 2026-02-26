@@ -309,11 +309,10 @@
 
         .main-row {
             display: flex;
-            align-items: flex-start;
-            gap: 1.5rem;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
             width: 100%;
-            max-width: 780px;
-            justify-content: center;
         }
 
         .templates {
@@ -322,6 +321,9 @@
             gap: 0.75rem;
             width: 200px;
             flex-shrink: 0;
+            position: absolute;
+            left: calc(50% + 260px + 1.5rem);
+            top: 0;
         }
 
         .template-label {
@@ -358,8 +360,16 @@
 
         @media (max-width: 750px) {
             .main-row { flex-direction: column; align-items: center; }
-            .templates { flex-direction: row; width: 100%; max-width: 520px; }
-            .template-card { flex: 1; }
+            .templates {
+                position: static;
+                width: 100%;
+                max-width: 520px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .template-label {
+                grid-column: 1 / -1;
+            }
         }
     </style>
 </head>
@@ -400,6 +410,14 @@
             <button class="template-card" data-first="Tyler" data-last="Brooks" data-dob="11052011" data-pet="Pixel">
                 <div class="template-name">Tyler Brooks</div>
                 <div class="template-desc">14 y/o gamer, hamster named Pixel</div>
+            </button>
+            <button class="template-card" data-first="Maria" data-last="Garcia" data-dob="06091975" data-pet="Rocky">
+                <div class="template-name">Maria Garcia</div>
+                <div class="template-desc">50 y/o, dog named Rocky</div>
+            </button>
+            <button class="template-card" data-first="Kevin" data-last="Chen" data-dob="12182000" data-pet="Mochi">
+                <div class="template-name">Kevin Chen</div>
+                <div class="template-desc">25 y/o, cat named Mochi</div>
             </button>
         </div>
     </div>

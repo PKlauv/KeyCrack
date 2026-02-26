@@ -333,7 +333,7 @@
             font-size: 0.85rem;
             line-height: 1.5;
             /* slight blur  */
-            backdrop-filter: blur(1px);
+            backdrop-filter: blur(3px);
               -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
                 background: rgba(0, 170, 42, 0.15);
                 border:0.5px solid rgba(0, 170, 42, 0.3);
@@ -602,6 +602,15 @@
         const categoriesDiv = document.getElementById("categories");
 
         let animationAborted = false;
+        let userScrolledAway = false;
+
+        function isNearBottom() {
+            return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 150);
+        }
+
+        window.addEventListener("scroll", () => {
+            userScrolledAway = !isNearBottom();
+        });
 
         function sleep(ms) {
             return new Promise(r => setTimeout(r, ms));
@@ -630,7 +639,9 @@
             const num = String(index + 1).padStart(3, "0");
             div.textContent = `[${num}] `;
             container.appendChild(div);
-            div.scrollIntoView({ behavior: "smooth", block: "end" });
+            if (!userScrolledAway) {
+                btnSkip.scrollIntoView({ behavior: "smooth", block: "end" });
+            }
 
             for (let i = 0; i < text.length; i++) {
                 if (animationAborted) {
@@ -746,6 +757,7 @@
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
+            userScrolledAway = false;
             errorDiv.style.display = "none";
             resultsDiv.style.display = "none";
             btn.disabled = true;

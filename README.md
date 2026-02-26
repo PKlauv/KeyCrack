@@ -1,5 +1,7 @@
 # KeyCrack
 
+![CI](https://github.com/PKlauv/KeyCrack/actions/workflows/ci.yml/badge.svg)
+
 KeyCrack is a password awareness tool designed to educate users about the predictability of their passwords. By inputting personal information (such as name, date of birth, pet name, etc.), KeyCrack generates a list of common password combinations, demonstrating how easily personal data can be used to guess passwords. This project is for educational and portfolio purposes -- no data is stored.
 
 ## Features
@@ -18,8 +20,8 @@ KeyCrack is a password awareness tool designed to educate users about the predic
 - **MVP 0:** Core generation logic (terminal only) -- Done
 - **MVP 1:** Functional web app (FastAPI + HTML form) -- Done
 - **MVP 2:** Hacker-themed UI, loading animation, privacy disclaimer, strength tips -- Done
-- **MVP 3:** Unit tests, Dockerization -- Done (current)
-- **MVP 4:** CI/CD, professional workflow -- Upcoming
+- **MVP 3:** Unit tests, Dockerization -- Done
+- **MVP 4:** CI/CD (GitHub Actions), linting (Ruff) -- Done (current)
 - **MVP 5:** Deployment (live on the internet) -- Upcoming
 
 ## Tech Stack
@@ -29,6 +31,8 @@ KeyCrack is a password awareness tool designed to educate users about the predic
 - HTML / CSS / JS
 - pytest
 - Docker + docker-compose
+- GitHub Actions (CI/CD)
+- Ruff (linting)
 
 ## Setup
 
@@ -37,6 +41,12 @@ KeyCrack is a password awareness tool designed to educate users about the predic
 
    ```bash
    pip install -r requirements.txt
+   ```
+
+   For development (includes Ruff linter):
+
+   ```bash
+   pip install -r requirements-dev.txt
    ```
 
 3. Run the web server:
@@ -52,14 +62,22 @@ KeyCrack is a password awareness tool designed to educate users about the predic
 1. **Fill in the form** -- enter your First Name, Last Name, Date of Birth (MMDDYYYY format), and optionally a Pet Name
 2. **Or click a sample template** -- three pre-filled examples (James Wilson, Sarah Miller, Tyler Brooks) let you try it out instantly
 3. **Click GENERATE** -- the app builds thousands of password combinations from your input
-4. **View results** -- see the top 20 most likely passwords with a typing animation, a breakdown chart by category, and expandable sections for all 5 categories (Name-Based, Leet Speak, Name + DOB, DOB + Name, DOB Only)
+4. **View results** -- see the top 30 most likely passwords with a typing animation, a breakdown chart by category, and expandable sections for all 5 categories (Name-Based, Leet Speak, Name + DOB, DOB + Name, DOB Only)
 
 ## Testing
 
-The test suite includes 42 tests across two files: `test_generator.py` validates the core logic (input parsing, password generation, scoring, and category classification) and `test_api.py` validates the FastAPI endpoints (valid/invalid payloads, response structure, and optional fields). Run them after making changes to the generation logic or API to make sure nothing broke.
+The test suite includes 56 tests across two files: `test_generator.py` validates the core logic (input parsing, password generation, scoring, and category classification) and `test_api.py` validates the FastAPI endpoints (valid/invalid payloads, response structure, and optional fields). Run them after making changes to the generation logic or API to make sure nothing broke.
 
 ```bash
 python -m pytest tests/ -v
+```
+
+## Linting
+
+Ruff handles linting and catches style issues, unused imports, and common mistakes. It runs automatically in CI on every push and pull request.
+
+```bash
+ruff check .
 ```
 
 ## Docker

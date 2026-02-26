@@ -59,14 +59,14 @@
         }
 
         h1 {
-            font-size: 2rem;
+            font-size: 3rem;
             margin-bottom: 0.25rem;
             color: #00ff41;
         }
 
         .cursor-blink::after {
             content: "_";
-            animation: blink 1s step-end infinite;
+            animation: blink 1.8s step-end infinite;
         }
 
         @keyframes blink {
@@ -77,6 +77,12 @@
         .subtitle {
             color: #00aa2a;
             margin-bottom: 2rem;
+            /* slight blur but different to the others */
+            backdrop-filter: blur(3px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(0, 170, 42, 0.15);
+                border:0.5px solid rgba(0, 170, 42, 0.3);
+                padding: 0.3rem 0.6rem;
         }
 
         .card {
@@ -312,6 +318,43 @@
             text-align: center;
             color: #ff0000;
             font-size: 1rem;
+            backdrop-filter: blur(1px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(188, 33, 33, 0.15);
+                border:0.5px solid rgba(255, 0, 0, 0.3);
+                padding: 0.1rem 0.3rem;
+        }
+
+        .intro {
+            color: #00aa2a;
+            text-align: center;
+            max-width: 520px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            /* slight blur  */
+            backdrop-filter: blur(1px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(0, 170, 42, 0.15);
+                border:0.5px solid rgba(0, 170, 42, 0.3);
+                padding: 0.5rem 1rem;
+        }
+
+        .privacy-inline {
+            color: #003b00;
+            font-size: 0.75rem;
+            text-align: center;
+            margin-top: 0.75rem;
+        }
+
+        .takeaway {
+            border: 1px solid #ff3333;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            color: #ff3333;
+            font-size: 0.85rem;
+            text-align: center;
+            line-height: 1.5;
         }
 
         .main-row {
@@ -337,6 +380,12 @@
             color: #00aa2a;
             font-size: 0.8rem;
             margin-bottom: 0.25rem;
+            margin-top: 0.5rem;
+            backdrop-filter: blur(1px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(0, 170, 42, 0.15);
+                border:0.5px solid rgba(0, 170, 42, 0.3);
+                padding: 0.25rem 0.5rem;
         }
 
         .template-card {
@@ -394,9 +443,11 @@
 <body>
     <canvas id="matrix-bg"></canvas>
     <h1 class="cursor-blink">KeyCrack</h1>
-    <p class="subtitle">// Password Awareness Tool</p>
+    <p class="subtitle">// Tool for password awareness</p>
 
     <div class="main-row">
+        <p class="intro">Enter your info below, or use one of the samples. We'll generate thousands of password
+        combinations to show you how predictable personal-info-based passwords really are.</p>
         <div class="card">
             <form id="form" autocomplete="off">
                 <label for="first_name">&gt; First Name</label>
@@ -412,6 +463,7 @@
                 <input type="text" id="pet_name" placeholder="Rex">
 
                 <button type="submit" id="btn" class="btn-primary">[ GENERATE ]</button>
+                <p class="privacy-inline">// Nothing leaves your browser. No data is stored.</p>
             </form>
             <div class="error" id="error"></div>
         </div>
@@ -457,6 +509,10 @@
         </div>
         <div class="breakdown" id="breakdown"></div>
         <div class="categories" id="categories"></div>
+        <div class="takeaway" id="takeaway" style="display:none;">
+            If any of these look familiar, consider using a password manager
+            and avoid passwords based on personal information.
+        </div>
     </div>
 
     <p class="privacy">// Nothing is stored. All generation happens in memory and is discarded.</p>
@@ -574,6 +630,7 @@
             const num = String(index + 1).padStart(3, "0");
             div.textContent = `[${num}] `;
             container.appendChild(div);
+            div.scrollIntoView({ behavior: "smooth", block: "end" });
 
             for (let i = 0; i < text.length; i++) {
                 if (animationAborted) {
@@ -736,9 +793,12 @@
                 }
 
                 resultsDiv.style.display = "block";
+                statsBanner.scrollIntoView({ behavior: "smooth", block: "start" });
 
                 // Animate top 20 last so user sees everything else first
+                document.getElementById("takeaway").style.display = "none";
                 await animateTopPasswords(data.top_passwords);
+                document.getElementById("takeaway").style.display = "block";
 
             } catch (err) {
                 hideLoading();

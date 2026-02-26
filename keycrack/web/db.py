@@ -66,19 +66,25 @@ async def close_db():
 
 async def insert_bug(description: str, email: str | None, category: str, created_at: str) -> int:
     if _pool is not None:
-        async with _pool.acquire() as conn:
-            row = await conn.fetchrow(
-                "INSERT INTO bugs (description, email, category, created_at) "
-                "VALUES ($1, $2, $3, $4) RETURNING id",
-                description, email, category, created_at,
-            )
-            return row["id"]
+        try:
+            async with _pool.acquire() as conn:
+                row = await conn.fetchrow(
+                    "INSERT INTO bugs (description, email, category, created_at) "
+                    "VALUES ($1, $2, $3, $4) RETURNING id",
+                    description, email, category, created_at,
+                )
+                print(f"[DB] Inserted bug #{row['id']} into PostgreSQL")
+                return row["id"]
+        except Exception as e:
+            print(f"[DB] PostgreSQL insert FAILED: {e}")
+            raise
     else:
         cursor = await _conn.execute(
             "INSERT INTO bugs (description, email, category, created_at) VALUES (?, ?, ?, ?)",
             (description, email, category, created_at),
         )
         await _conn.commit()
+        print(f"[DB] Inserted bug #{cursor.lastrowid} into SQLite (no pool)")
         return cursor.lastrowid
 
 

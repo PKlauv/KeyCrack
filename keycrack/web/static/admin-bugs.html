@@ -231,7 +231,11 @@
 
         async function loadBugs() {
             try {
-                const res = await fetch("/api/bugs");
+                const res = await fetch("/api/bugs", { credentials: "include" });
+                if (res.status === 401) {
+                    contentDiv.innerHTML = '<div class="empty-msg">Authentication required.</div>';
+                    return;
+                }
                 const bugs = await res.json();
 
                 countDiv.innerHTML = "> Total reports: <span class='count-num'>" + bugs.length + "</span>";

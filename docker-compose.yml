@@ -5,6 +5,9 @@ services:
       - "8000:8000"
     volumes:
       - bug-data:/app/data
+    environment:
+      - ADMIN_USER=${ADMIN_USER:-admin}
+      - ADMIN_PASS=${ADMIN_PASS:-changeme}
     restart: unless-stopped
 
 volumes:

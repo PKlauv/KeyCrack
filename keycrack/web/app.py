@@ -1,3 +1,5 @@
+import os
+import secrets
 import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -6,8 +8,9 @@ from pathlib import Path
 from typing import Optional
 
 import aiosqlite
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import FileResponse, JSONResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, Field
 
 from keycrack.generator import PersonalInfo, strip_to_alpha, validate_dob
@@ -16,6 +19,28 @@ from keycrack.pcfg import generate_passwords_pcfg
 DATA_DIR = Path(__file__).parent.parent.parent / "data"
 DB_PATH = DATA_DIR / "bugs.db"
 db: aiosqlite.Connection | None = None
+
+ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "changeme")
+security = HTTPBasic(realm="KeyCrack Admin")
+
+
+def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
+    username_ok = secrets.compare_digest(
+        credentials.username.encode("utf-8"),
+        ADMIN_USER.encode("utf-8"),
+    )
+    password_ok = secrets.compare_digest(
+        credentials.password.encode("utf-8"),
+        ADMIN_PASS.encode("utf-8"),
+    )
+    if not (username_ok and password_ok):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": 'Basic realm="KeyCrack Admin"'},
+        )
+    return credentials.username
 
 CREATE_BUGS_TABLE = """
 CREATE TABLE IF NOT EXISTS bugs (
@@ -200,12 +225,12 @@ async def submit_bug(report: BugReportRequest):
 
 
 @app.get("/admin/bugs")
-async def admin_bugs_page():
+async def admin_bugs_page(username: str = Depends(verify_admin)):
     return FileResponse(STATIC_DIR / "admin-bugs.html")
 
 
 @app.get("/api/bugs", response_model=list[BugReportDetail])
-async def list_bugs():
+async def list_bugs(username: str = Depends(verify_admin)):
     cursor = await db.execute("SELECT * FROM bugs ORDER BY id DESC")
     rows = await cursor.fetchall()
     return [

@@ -1,3 +1,6 @@
+# Dual-database layer: connects to Supabase PostgreSQL in production (via
+# DATABASE_URL env var) or falls back to a local SQLite file for development.
+
 import os
 from pathlib import Path
 
@@ -30,6 +33,8 @@ CREATE TABLE IF NOT EXISTS bugs (
 """
 
 
+# Check DATABASE_URL to decide the backend, create the pool/connection and
+# ensure the bugs table exists.
 async def connect_db():
     global _pool, _conn
 
@@ -64,6 +69,8 @@ async def close_db():
         _conn = None
 
 
+# insert_bug and fetch_bugs use whichever backend connect_db() initialized,
+# with the correct placeholder syntax ($1 for Postgres, ? for SQLite).
 async def insert_bug(description: str, email: str | None, category: str, created_at: str) -> int:
     if _pool is not None:
         try:

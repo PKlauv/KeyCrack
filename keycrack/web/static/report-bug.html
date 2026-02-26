@@ -306,6 +306,8 @@
             charCounter.classList.toggle("warning", len >= 450);
         });
 
+        // Submit bug report: POST to /api/bugs, show success/error feedback,
+        // and reset the form on success.
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
             errorDiv.style.display = "none";

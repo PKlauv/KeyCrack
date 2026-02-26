@@ -1,3 +1,4 @@
+# Entrypoint: starts the uvicorn server on the configured port.
 import os
 
 import uvicorn

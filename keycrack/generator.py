@@ -1,7 +1,11 @@
+# Shared data types, input validation, and leet-speak transform used by the
+# PCFG generation engine.
+
 import re
 from dataclasses import dataclass
 from typing import Optional
 
+# Letter-to-symbol substitutions for leet speak passwords (a -> @, e -> 3, etc.)
 LEET_MAP = {
     "a": "@",
     "e": "3",
@@ -12,6 +16,7 @@ LEET_MAP = {
     "l": "1",
 }
 
+# Passwords shorter than this are filtered out as too weak to be realistic
 MIN_LENGTH = 6
 
 
@@ -31,6 +36,7 @@ def strip_to_alpha(name: str) -> str:
     return re.sub(r"[^a-zA-Z]", "", name)
 
 
+# Input to the generation engine: the personal details we build passwords from
 @dataclass
 class PersonalInfo:
     first_name: str
@@ -43,6 +49,7 @@ def leet_speak(word: str) -> str:
     return "".join(LEET_MAP.get(c.lower(), c) for c in word)
 
 
+# Output of the generation engine: passwords grouped by category + ranked top 30
 @dataclass
 class CategorizedPasswords:
     name_based: set[str]

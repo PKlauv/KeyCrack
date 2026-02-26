@@ -78,7 +78,6 @@
         .subtitle {
             color: #00aa2a;
             margin-bottom: 2rem;
-            /* slight blur but different to the others */
             backdrop-filter: blur(3px);
               -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
                 background: rgba(0, 170, 42, 0.15);
@@ -361,7 +360,6 @@
             margin-bottom: 1.5rem;
             font-size: 0.85rem;
             line-height: 1.5;
-            /* slight blur  */
             backdrop-filter: blur(3px);
               -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
                 background: rgba(0, 170, 42, 0.15);
@@ -554,6 +552,8 @@
         <a href="/report-bug" style="color:#00aa2a; font-size:0.85rem;">[ Report a Bug ]</a>
     </p>
 
+    <!-- Horizontal matrix rain: rows of random characters scroll left-to-right
+         across a full-screen canvas behind the UI -->
     <script>
         // Horizontal matrix rain background
         (function() {
@@ -693,6 +693,8 @@
             div.appendChild(probSpan);
         }
 
+        // Typewriter effect: reveals each top password character by character,
+        // with a skip button to render the rest instantly.
         async function animateTopPasswords(entries) {
             animationAborted = false;
             topList.innerHTML = "";
@@ -744,6 +746,8 @@
             return lines.join("\n");
         }
 
+        // Build a collapsible <details> block for one password category,
+        // with paginated password list and a "load more" button.
         function buildCategorySection(key, cat) {
             const details = document.createElement("details");
             const summary = document.createElement("summary");
@@ -796,6 +800,7 @@
         btnClose.addEventListener("click", () => {
             resultsDiv.style.display = "none";
             btnClose.style.display = "none";
+            form.reset();
             window.scrollTo({ top: 0, behavior: "smooth" });
         });
 
@@ -808,6 +813,8 @@
             });
         });
 
+        // Generate flow: POST personal info, render stats and breakdown chart,
+        // build collapsible category sections, then animate the top-30 list.
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
             errorDiv.style.display = "none";
@@ -868,7 +875,6 @@
                 await animateTopPasswords(data.top_passwords);
                 document.getElementById("takeaway").style.display = "block";
                 btnClose.style.display = "block";
-                form.reset();
 
             } catch (err) {
                 hideLoading();

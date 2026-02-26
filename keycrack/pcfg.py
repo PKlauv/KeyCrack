@@ -1,3 +1,8 @@
+# Probabilistic Context-Free Grammar (PCFG) password generator. Defines a
+# grammar of 30 templates (name+digits, name+DOB, leet variants, etc.), expands
+# every combination via Cartesian product, scores them by probability, and
+# returns a diverse top-30 list plus full categorized results.
+
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -8,6 +13,9 @@ from keycrack.generator import (
     leet_speak,
 )
 
+# Grammar model: a Template is a sequence of Slots, each Slot holds possible
+# SlotValues with probabilities. Expanding a Template produces every combination
+# of slot values with their joint probability.
 
 @dataclass(frozen=True)
 class SlotValue:
@@ -30,6 +38,8 @@ class Template:
     category: str
 
 
+# Split a name into three casing variants weighted by real-world frequency:
+# lowercase (50%), capitalized (40%), and uppercase (10%).
 def case_expand(value: str) -> list[tuple[str, float]]:
     results = [(value.lower(), 0.50), (value.capitalize(), 0.40)]
     if value.lower() != value.upper():
@@ -40,6 +50,8 @@ def case_expand(value: str) -> list[tuple[str, float]]:
 # -- Slot factory functions --
 
 
+# When no pet name is provided, its probability share is redistributed
+# to first and last name so slot probabilities still sum to 1.0.
 def make_name_slot(info: PersonalInfo) -> Slot:
     values = [
         SlotValue(info.first_name, 0.50),
@@ -289,6 +301,9 @@ def build_grammar(info: PersonalInfo) -> list[Template]:
 # -- Template expansion --
 
 
+# Cartesian product of all slots in a template. Each combination's probability
+# is the product of the template's base_prob, each slot value's prob, and
+# (if apply_case) the casing variant's prob.
 def expand_template(template: Template) -> list[tuple[str, float]]:
     expansions = [("", template.base_prob)]
     for slot in template.slots:
@@ -311,6 +326,8 @@ def expand_template(template: Template) -> list[tuple[str, float]]:
 # -- Diverse top-N selection --
 
 
+# Pick the top N passwords by probability, but cap each template at
+# max_per_template entries so the list shows variety across patterns.
 def _select_diverse_top(
     scored: list[tuple[str, float, str]],
     n: int = 30,
@@ -341,7 +358,6 @@ def _select_diverse_top(
 def generate_passwords_pcfg(info: PersonalInfo) -> CategorizedPasswords:
     templates = build_grammar(info)
 
-    # Expand all templates
     all_passwords: list[tuple[str, float, str, str]] = []
     for template in templates:
         for pw, prob in expand_template(template):

@@ -1,3 +1,6 @@
+# FastAPI backend: serves the static UI, exposes the /generate endpoint for
+# password generation, and handles bug report CRUD with admin auth.
+
 import os
 import secrets
 import time
@@ -21,6 +24,7 @@ ADMIN_PASS = os.environ.get("ADMIN_PASS", "changeme")
 security = HTTPBasic(realm="KeyCrack Admin")
 
 
+# Constant-time credential comparison to prevent timing side-channel attacks
 def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
     username_ok = secrets.compare_digest(
         credentials.username.encode("utf-8"),
@@ -76,6 +80,7 @@ class CategorizedPasswordResponse(BaseModel):
     elapsed_seconds: float
 
 
+# Maps internal category keys to user-facing labels and descriptions for the UI
 CATEGORY_META = {
     "name_based": {
         "label": "Name-Based",
@@ -110,6 +115,8 @@ async def index():
     return FileResponse(STATIC_DIR / "index.html")
 
 
+# Validate and clean input, run the PCFG generator, then format the response
+# with categorized passwords, a ranked top-30 list, and timing stats.
 @app.post("/generate", response_model=CategorizedPasswordResponse)
 async def generate(req: PasswordRequest):
     dob = validate_dob(req.dob.strip())

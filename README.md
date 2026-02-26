@@ -158,7 +158,7 @@ render.yaml                # Render deployment config
 
 KeyCrack started as a terminal-only proof of concept -- type in a name and DOB, get a list of likely passwords printed to stdout.
 
-From there it grew through MVP stages: the basic generator was replaced with a full **PCFG engine** (30 templates, probability ranking, diversity capping). Then came the **FastAPI web app** with a hacker-themed UI featuring matrix rain and typing animations. **Bug reporting** and an **admin dashboard** followed, backed by Supabase in production with SQLite fallback for local dev. Finally, **Docker containerization**, a **GitHub Actions CI pipeline**, and **Render deployment** brought it to production.
+From there it grew through many stages: the basic generator was replaced with a full **PCFG engine** (30 templates, probability ranking, diversity capping). Then came the **FastAPI web app** with a hacker-themed UI featuring matrix rain and typing animations. **Bug reporting** and an **admin dashboard** followed, backed by Supabase in production with SQLite fallback for local dev. Finally, **Docker containerization**, a **GitHub Actions CI pipeline**, and **Render deployment** brought it to production.
 
 ---
 

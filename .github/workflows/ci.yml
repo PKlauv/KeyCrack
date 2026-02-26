@@ -1,3 +1,4 @@
+# Lint with Ruff then run the full pytest suite on every push/PR to main.
 name: CI
 
 on:

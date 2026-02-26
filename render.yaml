@@ -7,16 +7,8 @@ services:
     healthCheckPath: /
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: keycrack-db
-          property: connectionString
+        sync: false
       - key: ADMIN_USER
         sync: false
       - key: ADMIN_PASS
         sync: false
-
-databases:
-  - name: keycrack-db
-    plan: free
-    databaseName: keycrack
-    user: keycrack

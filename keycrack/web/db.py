@@ -36,7 +36,7 @@ async def connect_db():
     if DATABASE_URL:
         import asyncpg
 
-        _pool = await asyncpg.create_pool(DATABASE_URL)
+        _pool = await asyncpg.create_pool(DATABASE_URL, statement_cache_size=0)
         async with _pool.acquire() as conn:
             await conn.execute(CREATE_BUGS_TABLE_PG)
     else:

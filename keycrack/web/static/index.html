@@ -231,12 +231,24 @@
         }
 
         .btn-skip {
-            margin-top: 0.75rem;
-            padding: 0.3rem 0.8rem;
-            background: transparent;
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.4rem 1rem;
+            background: rgba(0, 0, 0, 0.9);
             color: #00aa2a;
             border: 1px solid #003b00;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .btn-skip.visible {
+            opacity: 1;
+            pointer-events: auto;
         }
 
         .btn-skip:hover {
@@ -620,15 +632,6 @@
         const categoriesDiv = document.getElementById("categories");
 
         let animationAborted = false;
-        let userScrolledAway = false;
-
-        function isNearBottom() {
-            return (window.innerHeight + window.scrollY) >= (document.body.scrollHeight - 150);
-        }
-
-        window.addEventListener("scroll", () => {
-            userScrolledAway = !isNearBottom();
-        });
 
         function sleep(ms) {
             return new Promise(r => setTimeout(r, ms));
@@ -657,8 +660,9 @@
             const num = String(index + 1).padStart(3, "0");
             div.textContent = `[${num}] `;
             container.appendChild(div);
-            if (!userScrolledAway) {
-                btnSkip.scrollIntoView({ behavior: "smooth", block: "end" });
+            const rect = container.getBoundingClientRect();
+            if (rect.bottom < window.innerHeight + 200) {
+                div.scrollIntoView({ behavior: "smooth", block: "nearest" });
             }
 
             for (let i = 0; i < text.length; i++) {
@@ -675,6 +679,7 @@
             animationAborted = false;
             topList.innerHTML = "";
             btnSkip.style.display = "inline-block";
+            requestAnimationFrame(() => btnSkip.classList.add("visible"));
 
             for (let i = 0; i < passwords.length; i++) {
                 if (animationAborted) {
@@ -689,10 +694,11 @@
                     break;
                 }
                 await typePassword(topList, i, passwords[i]);
-                if (!animationAborted) await sleep(50);
+                if (!animationAborted) await sleep(25);
             }
 
-            btnSkip.style.display = "none";
+            btnSkip.classList.remove("visible");
+            setTimeout(() => { btnSkip.style.display = "none"; }, 300);
         }
 
         function buildBreakdownChart(categories, total) {
@@ -781,7 +787,6 @@
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
-            userScrolledAway = false;
             errorDiv.style.display = "none";
             resultsDiv.style.display = "none";
             btnClose.style.display = "none";

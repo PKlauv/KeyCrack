@@ -517,6 +517,10 @@
                 <div class="template-name">Kevin Chen</div>
                 <div class="template-desc">25 y/o, cat named Mochi</div>
             </button>
+            <button class="template-card" data-first="Harold" data-last="Patterson" data-dob="08171948" data-pet="">
+                <div class="template-name">Harold Patterson</div>
+                <div class="template-desc">77 y/o grandpa, no pet</div>
+            </button>
         </div>
     </div>
 
@@ -836,6 +840,9 @@
 
                 resultsDiv.style.display = "block";
                 statsBanner.scrollIntoView({ behavior: "smooth", block: "start" });
+
+                // Wait for smooth scroll to settle before starting password animation
+                await new Promise(r => setTimeout(r, 600));
 
                 // Animate top 20 last so user sees everything else first
                 document.getElementById("takeaway").style.display = "none";

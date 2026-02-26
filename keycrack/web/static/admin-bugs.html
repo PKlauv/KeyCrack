@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyCrack - Bug Reports</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='10' cy='10' r='7' fill='none' stroke='%2300ff41' stroke-width='2.5'/><rect x='15' y='8.5' width='14' height='3' rx='1' fill='%2300ff41'/><rect x='24' y='11.5' width='3' height='5' rx='0.5' fill='%2300ff41'/><rect x='19' y='11.5' width='3' height='4' rx='0.5' fill='%2300ff41'/></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body {
+            font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+            background: #000000;
+            color: #00ff41;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.6) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15) 0px,
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            z-index: 9999;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.25rem;
+            color: #00ff41;
+        }
+
+        .subtitle {
+            color: #00aa2a;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(0, 170, 42, 0.15);
+            border: 0.5px solid rgba(0, 170, 42, 0.3);
+            padding: 0.3rem 0.6rem;
+        }
+
+        .report-count {
+            color: #00aa2a;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .count-num {
+            color: #00ff41;
+            font-weight: bold;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #00ff41;
+            border-radius: 0;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.15), 0 0 60px rgba(0, 255, 65, 0.05);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.5rem;
+            color: #00ff41;
+            border-bottom: 1px solid #00ff41;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 0.5rem;
+            color: #00aa2a;
+            border-bottom: 1px solid #003b00;
+            vertical-align: top;
+        }
+
+        td.desc-cell {
+            max-width: 300px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        tr:hover td { color: #00ff41; }
+
+        .empty-msg {
+            color: #003b00;
+            text-align: center;
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .back-link a {
+            color: #00aa2a;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .back-link a:hover { color: #00ff41; }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+    <h1>Bug Reports</h1>
+    <p class="subtitle">// Admin view</p>
+
+    <div class="report-count" id="report-count"></div>
+
+    <div class="card">
+        <div id="content"></div>
+    </div>
+
+    <div class="back-link">
+        <a href="/">[ Back to KeyCrack ]</a>
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById("matrix-bg");
+            const ctx = canvas.getContext("2d");
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(){}[]|;:<>?/~";
+            const charArray = chars.split("");
+            let rows = [];
+            const ROW_HEIGHT = 18;
+            const BASE_SPEED = 1.5;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                initRows();
+            }
+
+            function initRows() {
+                const numRows = Math.floor(canvas.height / ROW_HEIGHT);
+                rows = [];
+                for (let i = 0; i < numRows; i++) {
+                    rows.push({
+                        y: i * ROW_HEIGHT + ROW_HEIGHT / 2,
+                        x: -Math.random() * canvas.width,
+                        speed: BASE_SPEED + Math.random() * 1.5,
+                        opacity: 0.25 + Math.random() * 0.15,
+                        text: generateText(Math.floor(canvas.width / 10) + 20),
+                        fontSize: Math.floor(10 + Math.random() * 4),
+                    });
+                }
+            }
+
+            function generateText(len) {
+                let t = "";
+                for (let i = 0; i < len; i++) {
+                    t += charArray[Math.floor(Math.random() * charArray.length)];
+                }
+                return t;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (const row of rows) {
+                    ctx.font = row.fontSize + "px monospace";
+                    ctx.fillStyle = "rgba(0, 255, 65, " + row.opacity + ")";
+                    ctx.fillText(row.text, row.x, row.y);
+                    row.x += row.speed;
+                    const textWidth = row.text.length * (row.fontSize * 0.6);
+                    if (row.x > canvas.width + 50) {
+                        row.x = -textWidth;
+                        row.text = generateText(row.text.length);
+                        row.speed = BASE_SPEED + Math.random() * 1.5;
+                        row.opacity = 0.25 + Math.random() * 0.15;
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener("resize", resize);
+            resize();
+            draw();
+        })();
+    </script>
+
+    <script>
+        const contentDiv = document.getElementById("content");
+        const countDiv = document.getElementById("report-count");
+
+        async function loadBugs() {
+            try {
+                const res = await fetch("/api/bugs");
+                const bugs = await res.json();
+
+                countDiv.innerHTML = "> Total reports: <span class='count-num'>" + bugs.length + "</span>";
+
+                if (bugs.length === 0) {
+                    contentDiv.innerHTML = '<div class="empty-msg">No bug reports yet.</div>';
+                    return;
+                }
+
+                let html = "<table><thead><tr>";
+                html += "<th>#</th><th>Date</th><th>Category</th><th>Description</th><th>Email</th>";
+                html += "</tr></thead><tbody>";
+
+                for (const bug of bugs) {
+                    const date = new Date(bug.created_at).toLocaleString();
+                    const desc = bug.description.length > 200
+                        ? bug.description.substring(0, 200) + "..."
+                        : bug.description;
+                    const email = bug.email || "-";
+                    html += "<tr>";
+                    html += "<td>" + bug.id + "</td>";
+                    html += "<td>" + date + "</td>";
+                    html += "<td>" + bug.category + "</td>";
+                    html += '<td class="desc-cell">' + escapeHtml(desc) + "</td>";
+                    html += "<td>" + escapeHtml(email) + "</td>";
+                    html += "</tr>";
+                }
+
+                html += "</tbody></table>";
+                contentDiv.innerHTML = html;
+            } catch (err) {
+                contentDiv.innerHTML = '<div class="empty-msg">Failed to load bug reports.</div>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement("div");
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadBugs();
+    </script>
+</body>
+</html>

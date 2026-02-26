@@ -1,15 +1,46 @@
 import time
+from contextlib import asynccontextmanager
+from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 from typing import Optional
 
+import aiosqlite
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from keycrack.generator import PersonalInfo, strip_to_alpha, validate_dob
 from keycrack.pcfg import generate_passwords_pcfg
 
-app = FastAPI(title="KeyCrack", description="Password awareness tool")
+DATA_DIR = Path(__file__).parent.parent.parent / "data"
+DB_PATH = DATA_DIR / "bugs.db"
+db: aiosqlite.Connection | None = None
+
+CREATE_BUGS_TABLE = """
+CREATE TABLE IF NOT EXISTS bugs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    description TEXT NOT NULL,
+    email TEXT,
+    category TEXT NOT NULL DEFAULT 'Other',
+    created_at TEXT NOT NULL
+);
+"""
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global db
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    db = await aiosqlite.connect(DB_PATH)
+    db.row_factory = aiosqlite.Row
+    await db.execute(CREATE_BUGS_TABLE)
+    await db.commit()
+    yield
+    await db.close()
+
+
+app = FastAPI(title="KeyCrack", description="Password awareness tool", lifespan=lifespan)
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -121,3 +152,69 @@ async def generate(req: PasswordRequest):
         total_count=total,
         elapsed_seconds=round(elapsed, 4),
     )
+
+
+# --- Bug Reports ---
+
+
+class BugCategory(str, Enum):
+    UI_ISSUE = "UI issue"
+    WRONG_PASSWORDS = "Wrong passwords"
+    CRASH = "Crash"
+    OTHER = "Other"
+
+
+class BugReportRequest(BaseModel):
+    description: str = Field(..., min_length=1, max_length=500)
+    email: Optional[str] = None
+    category: BugCategory = BugCategory.OTHER
+
+
+class BugReportResponse(BaseModel):
+    id: int
+    message: str
+
+
+class BugReportDetail(BaseModel):
+    id: int
+    description: str
+    email: Optional[str]
+    category: str
+    created_at: str
+
+
+@app.get("/report-bug")
+async def report_bug_page():
+    return FileResponse(STATIC_DIR / "report-bug.html")
+
+
+@app.post("/api/bugs", response_model=BugReportResponse, status_code=201)
+async def submit_bug(report: BugReportRequest):
+    now = datetime.now(timezone.utc).isoformat()
+    cursor = await db.execute(
+        "INSERT INTO bugs (description, email, category, created_at) VALUES (?, ?, ?, ?)",
+        (report.description, report.email, report.category.value, now),
+    )
+    await db.commit()
+    return BugReportResponse(id=cursor.lastrowid, message="Bug report submitted.")
+
+
+@app.get("/admin/bugs")
+async def admin_bugs_page():
+    return FileResponse(STATIC_DIR / "admin-bugs.html")
+
+
+@app.get("/api/bugs", response_model=list[BugReportDetail])
+async def list_bugs():
+    cursor = await db.execute("SELECT * FROM bugs ORDER BY id DESC")
+    rows = await cursor.fetchall()
+    return [
+        BugReportDetail(
+            id=row["id"],
+            description=row["description"],
+            email=row["email"],
+            category=row["category"],
+            created_at=row["created_at"],
+        )
+        for row in rows
+    ]

@@ -194,6 +194,12 @@
             margin-bottom: 1.5rem;
             white-space: pre;
         }
+        .count-highlight {
+            color: #ff3333;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-shadow: 0 0 6px #ff3333, 0 0 12px #ff3333;
+        }
 
         /* Top 20 section */
         .top-section {
@@ -585,7 +591,7 @@
                     break;
                 }
                 await typePassword(topList, i, passwords[i]);
-                if (!animationAborted) await sleep(150);
+                if (!animationAborted) await sleep(50);
             }
 
             btnSkip.style.display = "none";
@@ -703,7 +709,7 @@
 
                 // Stats banner
                 const sep = "=".repeat(52);
-                statsBanner.textContent = `${sep}\n[COMPLETE] ${data.total_count.toLocaleString()} passwords generated in ${data.elapsed_seconds}s\n${sep}`;
+                statsBanner.innerHTML = `${sep}<br>[COMPLETE] <span class="count-highlight">${data.total_count.toLocaleString()}</span> passwords generated in ${data.elapsed_seconds}s<br>${sep}`;
 
                 // Breakdown chart
                 breakdownDiv.textContent = buildBreakdownChart(data.categories, data.total_count);

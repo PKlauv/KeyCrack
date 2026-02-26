@@ -865,6 +865,7 @@
                 await animateTopPasswords(data.top_passwords);
                 document.getElementById("takeaway").style.display = "block";
                 btnClose.style.display = "block";
+                form.reset();
 
             } catch (err) {
                 hideLoading();
@@ -873,7 +874,6 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = "[ GENERATE ]";
-                form.reset();
             }
         });
     </script>

@@ -76,11 +76,11 @@ async def index():
 
 @app.post("/generate", response_model=CategorizedPasswordResponse)
 async def generate(req: PasswordRequest):
-    dob = validate_dob(req.dob)
+    dob = validate_dob(req.dob.strip())
 
-    clean_first = strip_to_alpha(req.first_name)
-    clean_last = strip_to_alpha(req.last_name)
-    clean_pet = strip_to_alpha(req.pet_name) if req.pet_name else ""
+    clean_first = strip_to_alpha(req.first_name.strip())
+    clean_last = strip_to_alpha(req.last_name.strip())
+    clean_pet = strip_to_alpha(req.pet_name.strip()) if req.pet_name else ""
 
     if not clean_first:
         raise HTTPException(status_code=422, detail="First name must contain at least one letter.")

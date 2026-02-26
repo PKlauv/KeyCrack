@@ -57,6 +57,16 @@ class TestGenerateValid:
         data = resp.json()
         assert len(data["top_passwords"]) <= 30
 
+    def test_top_passwords_have_probability(self, client):
+        resp = client.post("/generate", json=VALID_PAYLOAD)
+        data = resp.json()
+        for entry in data["top_passwords"]:
+            assert "password" in entry
+            assert "probability" in entry
+            assert isinstance(entry["password"], str)
+            assert isinstance(entry["probability"], float)
+            assert entry["probability"] > 0
+
     def test_total_count_positive(self, client):
         resp = client.post("/generate", json=VALID_PAYLOAD)
         data = resp.json()

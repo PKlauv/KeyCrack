@@ -6,12 +6,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 
-from keycrack.generator import (
-    PersonalInfo,
-    generate_passwords_categorized,
-    strip_to_alpha,
-    validate_dob,
-)
+from keycrack.generator import PersonalInfo, strip_to_alpha, validate_dob
+from keycrack.pcfg import generate_passwords_pcfg
 
 app = FastAPI(title="KeyCrack", description="Password awareness tool")
 
@@ -25,6 +21,11 @@ class PasswordRequest(BaseModel):
     pet_name: Optional[str] = None
 
 
+class TopPassword(BaseModel):
+    password: str
+    probability: float
+
+
 class CategoryDetail(BaseModel):
     label: str
     description: str
@@ -34,7 +35,7 @@ class CategoryDetail(BaseModel):
 
 class CategorizedPasswordResponse(BaseModel):
     categories: dict[str, CategoryDetail]
-    top_passwords: list[str]
+    top_passwords: list[TopPassword]
     total_count: int
     elapsed_seconds: float
 
@@ -94,7 +95,7 @@ async def generate(req: PasswordRequest):
     )
 
     start = time.perf_counter()
-    result = generate_passwords_categorized(info)
+    result = generate_passwords_pcfg(info)
     elapsed = time.perf_counter() - start
 
     categories = {}
@@ -109,9 +110,14 @@ async def generate(req: PasswordRequest):
         )
         total += len(pws)
 
+    top_passwords = [
+        TopPassword(password=pw, probability=prob)
+        for pw, prob in result.top_passwords
+    ]
+
     return CategorizedPasswordResponse(
         categories=categories,
-        top_passwords=result.top_passwords,
+        top_passwords=top_passwords,
         total_count=total,
         elapsed_seconds=round(elapsed, 4),
     )

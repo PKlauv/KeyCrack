@@ -7,7 +7,6 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
-import aiosqlite
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
@@ -15,10 +14,7 @@ from pydantic import BaseModel, Field
 
 from keycrack.generator import PersonalInfo, strip_to_alpha, validate_dob
 from keycrack.pcfg import generate_passwords_pcfg
-
-DATA_DIR = Path(__file__).parent.parent.parent / "data"
-DB_PATH = DATA_DIR / "bugs.db"
-db: aiosqlite.Connection | None = None
+from keycrack.web.db import close_db, connect_db, fetch_bugs, insert_bug
 
 ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
 ADMIN_PASS = os.environ.get("ADMIN_PASS", "changeme")
@@ -42,27 +38,11 @@ def verify_admin(credentials: HTTPBasicCredentials = Depends(security)):
         )
     return credentials.username
 
-CREATE_BUGS_TABLE = """
-CREATE TABLE IF NOT EXISTS bugs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    description TEXT NOT NULL,
-    email TEXT,
-    category TEXT NOT NULL DEFAULT 'Other',
-    created_at TEXT NOT NULL
-);
-"""
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global db
-    DATA_DIR.mkdir(parents=True, exist_ok=True)
-    db = await aiosqlite.connect(DB_PATH)
-    db.row_factory = aiosqlite.Row
-    await db.execute(CREATE_BUGS_TABLE)
-    await db.commit()
+    await connect_db()
     yield
-    await db.close()
+    await close_db()
 
 
 app = FastAPI(title="KeyCrack", description="Password awareness tool", lifespan=lifespan)
@@ -216,12 +196,8 @@ async def report_bug_page():
 @app.post("/api/bugs", response_model=BugReportResponse, status_code=201)
 async def submit_bug(report: BugReportRequest):
     now = datetime.now(timezone.utc).isoformat()
-    cursor = await db.execute(
-        "INSERT INTO bugs (description, email, category, created_at) VALUES (?, ?, ?, ?)",
-        (report.description, report.email, report.category.value, now),
-    )
-    await db.commit()
-    return BugReportResponse(id=cursor.lastrowid, message="Bug report submitted.")
+    bug_id = await insert_bug(report.description, report.email, report.category.value, now)
+    return BugReportResponse(id=bug_id, message="Bug report submitted.")
 
 
 @app.get("/admin/bugs")
@@ -231,8 +207,7 @@ async def admin_bugs_page(username: str = Depends(verify_admin)):
 
 @app.get("/api/bugs", response_model=list[BugReportDetail])
 async def list_bugs(username: str = Depends(verify_admin)):
-    cursor = await db.execute("SELECT * FROM bugs ORDER BY id DESC")
-    rows = await cursor.fetchall()
+    rows = await fetch_bugs()
     return [
         BugReportDetail(
             id=row["id"],

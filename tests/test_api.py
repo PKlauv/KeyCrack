@@ -15,9 +15,10 @@ EXPECTED_CATEGORIES = {"name_based", "leet_speak", "name_dob", "dob_name", "dob_
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
-    import keycrack.web.app as app_module
-    monkeypatch.setattr(app_module, "DB_PATH", tmp_path / "test_bugs.db")
-    monkeypatch.setattr(app_module, "DATA_DIR", tmp_path)
+    import keycrack.web.db as db_module
+    monkeypatch.setattr(db_module, "DATABASE_URL", None)
+    monkeypatch.setattr(db_module, "DB_PATH", tmp_path / "test_bugs.db")
+    monkeypatch.setattr(db_module, "DATA_DIR", tmp_path)
     with TestClient(app) as c:
         yield c
 

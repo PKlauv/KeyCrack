@@ -244,6 +244,22 @@
             color: #00ff41;
         }
 
+        .btn-close-results {
+            display: block;
+            margin: 1.5rem auto 0;
+            padding: 0.4rem 1.2rem;
+            background: transparent;
+            color: #00aa2a;
+            border: 1px solid #003b00;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-close-results:hover {
+            border-color: #00ff41;
+            color: #00ff41;
+        }
+
         /* Categories */
         .categories { margin-bottom: 1.5rem; }
 
@@ -513,6 +529,7 @@
             If any of these look familiar, consider using a password manager
             and avoid passwords based on personal information.
         </div>
+        <button class="btn-close-results" id="btn-close-results" style="display:none;">[ CLOSE RESULTS ]</button>
     </div>
 
     <p class="privacy">// Nothing is stored. All generation happens in memory and is discarded.</p>
@@ -598,6 +615,7 @@
         const statsBanner = document.getElementById("stats-banner");
         const topList = document.getElementById("top-list");
         const btnSkip = document.getElementById("btn-skip");
+        const btnClose = document.getElementById("btn-close-results");
         const breakdownDiv = document.getElementById("breakdown");
         const categoriesDiv = document.getElementById("categories");
 
@@ -746,6 +764,12 @@
             animationAborted = true;
         });
 
+        btnClose.addEventListener("click", () => {
+            resultsDiv.style.display = "none";
+            btnClose.style.display = "none";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
         document.querySelectorAll(".template-card").forEach(card => {
             card.addEventListener("click", () => {
                 document.getElementById("first_name").value = card.dataset.first;
@@ -760,6 +784,7 @@
             userScrolledAway = false;
             errorDiv.style.display = "none";
             resultsDiv.style.display = "none";
+            btnClose.style.display = "none";
             btn.disabled = true;
             btn.textContent = "[ GENERATING... ]";
 
@@ -811,6 +836,7 @@
                 document.getElementById("takeaway").style.display = "none";
                 await animateTopPasswords(data.top_passwords);
                 document.getElementById("takeaway").style.display = "block";
+                btnClose.style.display = "block";
 
             } catch (err) {
                 hideLoading();

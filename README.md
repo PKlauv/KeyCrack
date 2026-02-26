@@ -31,6 +31,11 @@ KeyCrack is designed so that user input never persists anywhere:
 - No Docker volumes -- container logs are ephemeral
 - Input is sanitized (`strip_to_alpha`) and validated (Pydantic + `validate_dob`) before processing
 
+## What's next
+
+- UI/UX design
+- Improved password scoring algorithm
+
 ---
 
-Made by PK Lauvstad with assistance of artificial intellegence
+#### Made by PK Lauvstad (w/AI assistance)

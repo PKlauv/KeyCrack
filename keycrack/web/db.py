@@ -36,17 +36,21 @@ async def connect_db():
     if DATABASE_URL:
         import asyncpg
 
+        print(f"[DB] Connecting to PostgreSQL (URL length: {len(DATABASE_URL)})")
         _pool = await asyncpg.create_pool(DATABASE_URL, statement_cache_size=0)
         async with _pool.acquire() as conn:
             await conn.execute(CREATE_BUGS_TABLE_PG)
+        print("[DB] PostgreSQL connected and bugs table ready")
     else:
         import aiosqlite
 
+        print("[DB] DATABASE_URL not set, falling back to SQLite")
         DATA_DIR.mkdir(parents=True, exist_ok=True)
         _conn = await aiosqlite.connect(DB_PATH)
         _conn.row_factory = aiosqlite.Row
         await _conn.execute(CREATE_BUGS_TABLE_SQLITE)
         await _conn.commit()
+        print(f"[DB] SQLite connected at {DB_PATH}")
 
 
 async def close_db():

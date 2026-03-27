@@ -216,8 +216,8 @@
             <textarea id="description" required placeholder="Describe the bug..." maxlength="500"></textarea>
             <div class="char-counter" id="char-counter">0 / 500</div>
 
-            <label for="email">&gt; Email <span class="optional">(optional)</span></label>
-            <input type="email" id="email" placeholder="you@example.com">
+            <label for="contact">&gt; Contact <span class="optional">(optional)</span></label>
+            <input type="text" id="contact" placeholder="email or @github">
 
             <button type="submit" id="btn" class="btn-primary">[ SUBMIT REPORT ]</button>
         </form>
@@ -317,11 +317,11 @@
 
             const description = descInput.value;
             const category = document.getElementById("category").value;
-            const email = document.getElementById("email").value.trim();
+            const contact = document.getElementById("contact").value.trim();
 
             try {
-                const row = await submitBug(description, category, email || null);
-                successDiv.textContent = "> Bug report submitted. (ID: " + row.id + ")";
+                await submitBug(description, category, contact || null);
+                successDiv.textContent = "> Bug report submitted. Thank you!";
                 successDiv.style.display = "block";
                 form.reset();
                 charCounter.textContent = "0 / 500";

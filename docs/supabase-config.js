@@ -6,9 +6,9 @@ const SUPABASE_URL = "https://fdtsktbzshndnwiububp.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkdHNrdGJ6c2huZG53aXVidWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzYwNDIsImV4cCI6MjA4NzMxMjA0Mn0.p1QU_Krf76umAu92xZDfnYHmnXIOqCpn7k3s_EgbpP4";
 
 // Insert a bug report via Supabase REST API (anon can insert via RLS policy)
-async function submitBug(description, category, email) {
+async function submitBug(description, category, contact) {
     const body = { description, category };
-    if (email) body.email = email;
+    if (contact) body.contact = contact;
     body.created_at = new Date().toISOString();
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/bugs`, {
@@ -17,7 +17,7 @@ async function submitBug(description, category, email) {
             "Content-Type": "application/json",
             "apikey": SUPABASE_ANON_KEY,
             "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-            "Prefer": "return=representation",
+            "Prefer": "return=minimal",
         },
         body: JSON.stringify(body),
     });
@@ -27,8 +27,7 @@ async function submitBug(description, category, email) {
         throw new Error(err.message || "Failed to submit bug report");
     }
 
-    const rows = await res.json();
-    return rows[0];
+    return { success: true };
 }
 
 // Fetch all bug reports via Supabase REST API (requires authenticated session)

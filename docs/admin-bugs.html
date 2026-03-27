@@ -348,7 +348,7 @@
                     html += "<tr>";
                     html += "<td>" + bug.id + "</td>";
                     html += "<td>" + date + "</td>";
-                    html += "<td>" + bug.category + "</td>";
+                    html += "<td>" + escapeHtml(bug.category) + "</td>";
                     html += '<td class="desc-cell">' + escapeHtml(desc) + "</td>";
                     html += "<td>" + escapeHtml(contact) + "</td>";
                     html += "</tr>";

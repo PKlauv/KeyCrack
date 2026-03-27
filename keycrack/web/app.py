@@ -19,8 +19,8 @@ from keycrack.generator import PersonalInfo, strip_to_alpha, validate_dob
 from keycrack.pcfg import generate_passwords_pcfg
 from keycrack.web.db import close_db, connect_db, fetch_bugs, insert_bug
 
-ADMIN_USER = os.environ.get("ADMIN_USER", "admin")
-ADMIN_PASS = os.environ.get("ADMIN_PASS", "changeme")
+ADMIN_USER = os.environ.get("ADMIN_USER", "")
+ADMIN_PASS = os.environ.get("ADMIN_PASS", "")
 security = HTTPBasic(realm="KeyCrack Admin")
 
 

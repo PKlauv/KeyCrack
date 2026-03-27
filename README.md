@@ -10,7 +10,7 @@
 
 A password awareness tool that shows how predictable your passwords might be. Enter personal info (name, DOB, pet name), and KeyCrack uses a probabilistic context-free grammar (PCFG) to generate the most likely password candidates -- each ranked by probability. Runs entirely in your browser -- nothing is stored, no server needed.
 
-**Live demo:** [pklauvstad.github.io/KeyCrack](https://pklauvstad.github.io/KeyCrack/)
+**Live demo:** [pklauv.github.io/KeyCrack](https://pklauv.github.io/KeyCrack/)
 
 > **Tip:** The UI is hacker-themed -- matrix rain, scanlines, green-on-black. Try one of the 6 sample personas for an instant demo.
 

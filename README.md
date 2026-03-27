@@ -73,7 +73,10 @@ KeyCrack runs entirely in your browser -- no data ever leaves your machine:
 ```
 docs/                        # Static site (GitHub Pages)
 ├── index.html               # Main UI with matrix rain + typing animation
-└── pcfg.js                  # Client-side PCFG engine (JS port)
+├── pcfg.js                  # Client-side PCFG engine (JS port)
+├── supabase-config.js       # Supabase API config + helpers
+├── report-bug.html          # Bug report form (writes to Supabase)
+└── admin-bugs.html          # Admin dashboard (Supabase Auth login)
 keycrack/                    # Python reference implementation
 ├── generator.py             # Data types, validation, leet speak
 ├── pcfg.py                  # PCFG engine, templates, probability math
@@ -130,10 +133,9 @@ tests/
 <details>
 <summary><strong>DevOps</strong></summary>
 
-- Docker with Python 3.12-slim base image
-- docker-compose for one-command local deployment
-- GitHub Actions CI pipeline (Ruff linting + pytest)
-- Render deployment with environment variable management
+- GitHub Pages static site deployment (zero build step)
+- GitHub Actions CI pipeline (Ruff linting + pytest + Node.js tests)
+- Supabase direct REST API integration from the browser
 </details>
 
 ---

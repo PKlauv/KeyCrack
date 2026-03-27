@@ -73,7 +73,7 @@ test("stripToAlpha removes non-alpha chars", () => {
 test("leetSpeak applies LEET_MAP correctly", () => {
     assert.equal(leetSpeak("password"), "p@$$w0rd");
     assert.equal(leetSpeak("test"), "73$7");
-    assert.equal(leetSpeak("Alice"), "@l1c3");
+    assert.equal(leetSpeak("Alice"), "@11c3");
 });
 
 test("leetSpeak preserves unmapped characters", () => {

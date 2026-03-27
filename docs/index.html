@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeyCrack - Password Awareness Tool</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='10' cy='10' r='7' fill='none' stroke='%2300ff41' stroke-width='2.5'/><rect x='15' y='8.5' width='14' height='3' rx='1' fill='%2300ff41'/><rect x='24' y='11.5' width='3' height='5' rx='0.5' fill='%2300ff41'/><rect x='19' y='11.5' width='3' height='4' rx='0.5' fill='%2300ff41'/></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        #matrix-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        body {
+            font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+            background: #000000;
+            color: #00ff41;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.6) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15) 0px,
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 3px
+            );
+            z-index: 9999;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 0.25rem;
+            color: #00ff41;
+        }
+
+        .cursor-blink::after {
+            content: "_";
+            animation: blink 1.8s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        .subtitle {
+            color: #00aa2a;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(3px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(0, 170, 42, 0.15);
+                border:0.5px solid rgba(0, 170, 42, 0.3);
+                padding: 0.3rem 0.6rem;
+        }
+
+        .card {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #00ff41;
+            border-radius: 0;
+            padding: 2rem;
+            width: 100%;
+            max-width: 520px;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.15), 0 0 60px rgba(0, 255, 65, 0.05);
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: #00aa2a;
+            margin-bottom: 0.3rem;
+            margin-top: 1rem;
+        }
+
+        label:first-of-type { margin-top: 0; }
+
+        input {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            background: #0a0a0a;
+            border: 1px solid #003b00;
+            border-radius: 0;
+            color: #00ff41;
+            font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+            font-size: 0.95rem;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00ff41;
+            box-shadow: 0 0 5px rgba(0, 255, 65, 0.3);
+        }
+
+        input::placeholder { color: #003b00; }
+
+        .optional { color: #009200; font-size: 0.8rem; }
+
+        button {
+            font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+            border-radius: 0;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            margin-top: 1.5rem;
+            width: 100%;
+            padding: 0.7rem;
+            background: transparent;
+            color: #00ff41;
+            border: 1px solid #00ff41;
+            font-size: 1rem;
+        }
+
+        .btn-primary:hover {
+            background: #00ff41;
+            color: #000000;
+        }
+
+        .btn-primary:disabled {
+            border-color: #003b00;
+            color: #003b00;
+            cursor: not-allowed;
+            background: transparent;
+        }
+
+        .error {
+            margin-top: 1rem;
+            padding: 0.7rem;
+            background: #0a0a0a;
+            border: 1px solid #ff3333;
+            border-radius: 0;
+            color: #ff3333;
+            display: none;
+        }
+
+        /* Loading state */
+        .loading {
+            margin-top: 1.5rem;
+            width: 100%;
+            max-width: 520px;
+            display: none;
+        }
+
+        .loading-line {
+            color: #00aa2a;
+            margin-bottom: 0.3rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .loading-line.visible { opacity: 1; }
+
+        /* Results area */
+        .results {
+            margin-top: 1.5rem;
+            width: 100%;
+            max-width: 700px;
+            display: none;
+            border: 1px solid #00ff41;
+            padding: 1.5rem;
+            background: rgba(0, 0, 0, 0.85);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.15), 0 0 60px rgba(0, 255, 65, 0.05);
+            overflow-x: auto;
+        }
+
+        /* Stats banner */
+        .stats-banner {
+            color: #00ff41;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            white-space: pre;
+        }
+        .count-highlight {
+            color: #ff3333;
+            font-weight: bold;
+            font-size: 1.2em;
+            text-shadow: 0 0 6px #ff3333, 0 0 12px #ff3333;
+        }
+
+        /* Top 30 section */
+        .top-section {
+            margin-bottom: 1.5rem;
+            border: 1px solid #00ff41;
+            padding: 1rem;
+        }
+
+        .top-header {
+            color: #ff3333;
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .top-list {
+            font-size: 0.85rem;
+        }
+
+        .top-entry {
+            margin-bottom: 0.15rem;
+            white-space: pre;
+        }
+
+        .btn-skip {
+            position: fixed;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.4rem 1rem;
+            background: rgba(0, 0, 0, 0.9);
+            color: #00aa2a;
+            border: 1px solid #003b00;
+            font-size: 0.8rem;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .btn-skip.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .btn-skip:hover {
+            border-color: #00ff41;
+            color: #00ff41;
+        }
+
+        .btn-close-results {
+            display: block;
+            margin: 1.5rem auto 0;
+            padding: 0.4rem 1.2rem;
+            background: transparent;
+            color: #00aa2a;
+            border: 1px solid #003b00;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .btn-close-results:hover {
+            border-color: #00ff41;
+            color: #00ff41;
+        }
+
+        /* Categories */
+        .categories { margin-bottom: 1.5rem; }
+
+        details {
+            border: 1px solid #00ff41;
+            margin-bottom: 0.5rem;
+        }
+
+        summary {
+            padding: 0.6rem 0.8rem;
+            cursor: pointer;
+            color: #00ff41;
+            font-family: "Cascadia Code", "Fira Code", "Consolas", monospace;
+            font-size: 0.85rem;
+            list-style: none;
+        }
+
+        summary::-webkit-details-marker { display: none; }
+        summary::marker { display: none; content: ""; }
+
+        summary::before {
+            content: "[+] ";
+            color: #00aa2a;
+        }
+
+        details[open] > summary::before {
+            content: "[-] ";
+        }
+
+        summary:hover { color: #33ff66; }
+
+        .cat-desc {
+            padding: 0 0.8rem 0.3rem;
+            color: #003b00;
+            font-size: 0.75rem;
+        }
+
+        .cat-passwords {
+            padding: 0 0.8rem 0.6rem;
+            font-size: 0.8rem;
+            color: #00aa2a;
+        }
+
+        .cat-passwords div {
+            padding: 0.1rem 0;
+        }
+
+        .btn-load-more {
+            margin-top: 0.3rem;
+            padding: 0.25rem 0.6rem;
+            background: transparent;
+            color: #00aa2a;
+            border: 1px solid #003b00;
+            font-size: 0.75rem;
+        }
+
+        .btn-load-more:hover {
+            border-color: #00ff41;
+            color: #00ff41;
+        }
+
+        /* ASCII chart */
+        .breakdown {
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            white-space: pre;
+            color: #00ff41;
+        }
+
+        .privacy {
+            margin-top: 1.5rem;
+            text-align: center;
+            color: #ff0000;
+            font-size: 1rem;
+            backdrop-filter: blur(1px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(188, 33, 33, 0.15);
+                border:0.5px solid rgba(255, 0, 0, 0.3);
+                padding: 0.1rem 0.3rem;
+        }
+
+        .intro {
+            color: #00aa2a;
+            text-align: center;
+            max-width: 520px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            backdrop-filter: blur(3px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(0, 170, 42, 0.15);
+                border:0.5px solid rgba(0, 170, 42, 0.3);
+                padding: 0.5rem 1rem;
+        }
+
+        .privacy-inline {
+            color: #008a00;
+            font-size: 1rem;
+            text-align: center;
+            margin-top: 0.75rem;
+        }
+
+        .takeaway {
+            border: 1px solid #ff3333;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            color: #ff3333;
+            font-size: 0.85rem;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .main-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            width: 100%;
+        }
+
+        .templates {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            width: 200px;
+            flex-shrink: 0;
+            position: absolute;
+            left: calc(50% + 260px + 1.5rem);
+            top: 0;
+        }
+
+        .template-label {
+            color: #00aa2a;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+            margin-top: 0.5rem;
+            backdrop-filter: blur(1px);
+              -webkit-backdrop-filter: blur(10px); /* For compatibility with older WebKit browsers */
+                background: rgba(0, 170, 42, 0.15);
+                border:0.5px solid rgba(0, 170, 42, 0.3);
+                padding: 0.25rem 0.5rem;
+        }
+
+        .template-card {
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid #003b00;
+            padding: 0.75rem;
+            cursor: pointer;
+            text-align: left;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .template-card:hover {
+            border-color: #00ff41;
+            box-shadow: 0 0 10px rgba(0, 255, 65, 0.15);
+        }
+
+        .template-name {
+            color: #00ff41;
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .template-desc {
+            color: #00aa2a;
+            font-size: 0.7rem;
+        }
+
+        @media (max-width: 750px) {
+            .main-row { flex-direction: column; align-items: center; }
+            .templates {
+                position: static;
+                width: 100%;
+                max-width: 520px;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+            }
+            .template-label {
+                grid-column: 1 / -1;
+            }
+            .stats-banner {
+                font-size: 0.7rem;
+                overflow-x: auto;
+            }
+            .breakdown {
+                font-size: 0.7rem;
+                overflow-x: auto;
+            }
+            .results {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix-bg"></canvas>
+    <h1 class="cursor-blink">KeyCrack</h1>
+    <p class="subtitle">// Tool for password awareness</p>
+
+    <div class="main-row">
+        <p class="intro">Enter your info below, or use one of the samples. We'll compute the most probable password
+        combinations to show you how predictable personal-info-based passwords really are.</p>
+        <div class="card">
+            <form id="form" autocomplete="off">
+                <label for="first_name">&gt; First Name</label>
+                <input type="text" id="first_name" required placeholder="John">
+
+                <label for="last_name">&gt; Last Name</label>
+                <input type="text" id="last_name" required placeholder="Smith">
+
+                <label for="dob">&gt; Date of Birth (MMDDYYYY)</label>
+                <input type="text" id="dob" required placeholder="01151990" maxlength="8">
+
+                <label for="pet_name">&gt; Pet Name <span class="optional">(optional)</span></label>
+                <input type="text" id="pet_name" placeholder="Rex">
+
+                <button type="submit" id="btn" class="btn-primary">[ GENERATE ]</button>
+                <p class="privacy-inline">// Nothing leaves your browser. No data is stored.</p>
+            </form>
+            <div class="error" id="error"></div>
+        </div>
+        <div class="templates">
+            <div class="template-label">&gt; Try a sample</div>
+            <button class="template-card" data-first="James" data-last="Wilson" data-dob="03141983" data-pet="Buddy">
+                <div class="template-name">James Wilson</div>
+                <div class="template-desc">42 y/o, dog named Buddy</div>
+            </button>
+            <button class="template-card" data-first="Sarah" data-last="Miller" data-dob="07221993" data-pet="Luna">
+                <div class="template-name">Sarah Miller</div>
+                <div class="template-desc">32 y/o, cat named Luna</div>
+            </button>
+            <button class="template-card" data-first="Tyler" data-last="Brooks" data-dob="11052011" data-pet="Pixel">
+                <div class="template-name">Tyler Brooks</div>
+                <div class="template-desc">14 y/o gamer, hamster named Pixel</div>
+            </button>
+            <button class="template-card" data-first="Maria" data-last="Garcia" data-dob="06091975" data-pet="Rocky">
+                <div class="template-name">Maria Garcia</div>
+                <div class="template-desc">50 y/o, dog named Rocky</div>
+            </button>
+            <button class="template-card" data-first="Kevin" data-last="Chen" data-dob="12182000" data-pet="Mochi">
+                <div class="template-name">Kevin Chen</div>
+                <div class="template-desc">25 y/o, cat named Mochi</div>
+            </button>
+            <button class="template-card" data-first="Harold" data-last="Patterson" data-dob="08171948" data-pet="">
+                <div class="template-name">Harold Patterson</div>
+                <div class="template-desc">77 y/o grandpa, no pet</div>
+            </button>
+        </div>
+    </div>
+
+    <div class="loading" id="loading">
+        <div class="loading-line">&gt; Analyzing name permutations...</div>
+        <div class="loading-line">&gt; Generating DOB combinations...</div>
+        <div class="loading-line">&gt; Applying leet speak transforms...</div>
+        <div class="loading-line">&gt; Computing password probabilities...</div>
+        <div class="loading-line">&gt; Compiling results...</div>
+    </div>
+
+    <div class="results" id="results">
+        <div class="stats-banner" id="stats-banner"></div>
+        <div class="top-section" id="top-section">
+            <div class="top-header">&gt; WARNING: TOP 30 MOST LIKELY PASSWORDS</div>
+            <div class="top-list" id="top-list"></div>
+            <button class="btn-skip" id="btn-skip" style="display:none;">[ SKIP ANIMATION ]</button>
+        </div>
+        <div class="breakdown" id="breakdown"></div>
+        <div class="categories" id="categories"></div>
+        <div class="takeaway" id="takeaway" style="display:none;">
+            If any of these look familiar, consider using a password manager
+            and avoid passwords based on personal information.
+        </div>
+        <button class="btn-close-results" id="btn-close-results" style="display:none;">[ CLOSE RESULTS ]</button>
+    </div>
+
+    <p class="privacy">// Nothing is stored. All generation happens in memory and is discarded.</p>
+    <p style="text-align:center; margin-top:0.5rem;">
+        <a href="https://github.com/PKlauv/KeyCrack/issues" target="_blank" rel="noopener" style="color:#00aa2a; font-size:0.85rem;">[ Report a Bug ]</a>
+    </p>
+
+    <script src="pcfg.js"></script>
+
+    <!-- Horizontal matrix rain: rows of random characters scroll left-to-right
+         across a full-screen canvas behind the UI -->
+    <script>
+        // Horizontal matrix rain background
+        (function() {
+            const canvas = document.getElementById("matrix-bg");
+            const ctx = canvas.getContext("2d");
+
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(){}[]|;:<>?/~";
+            const charArray = chars.split("");
+
+            let rows = [];
+            const ROW_HEIGHT = 18;
+            const BASE_SPEED = 1.5;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                initRows();
+            }
+
+            function initRows() {
+                const numRows = Math.floor(canvas.height / ROW_HEIGHT);
+                rows = [];
+                for (let i = 0; i < numRows; i++) {
+                    rows.push({
+                        y: i * ROW_HEIGHT + ROW_HEIGHT / 2,
+                        x: -Math.random() * canvas.width,
+                        speed: BASE_SPEED + Math.random() * 1.5,
+                        opacity: 0.25 + Math.random() * 0.15,
+                        text: generateText(Math.floor(canvas.width / 10) + 20),
+                        fontSize: Math.floor(10 + Math.random() * 4),
+                    });
+                }
+            }
+
+            function generateText(len) {
+                let t = "";
+                for (let i = 0; i < len; i++) {
+                    t += charArray[Math.floor(Math.random() * charArray.length)];
+                }
+                return t;
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                for (const row of rows) {
+                    ctx.font = row.fontSize + "px monospace";
+                    ctx.fillStyle = "rgba(0, 255, 65, " + row.opacity + ")";
+                    ctx.fillText(row.text, row.x, row.y);
+
+                    row.x += row.speed;
+
+                    // Reset when scrolled fully off screen
+                    const textWidth = row.text.length * (row.fontSize * 0.6);
+                    if (row.x > canvas.width + 50) {
+                        row.x = -textWidth;
+                        row.text = generateText(row.text.length);
+                        row.speed = BASE_SPEED + Math.random() * 1.5;
+                        row.opacity = 0.25 + Math.random() * 0.15;
+                    }
+                }
+
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener("resize", resize);
+            resize();
+            draw();
+        })();
+    </script>
+
+    <script>
+        const PAGE_SIZE = 50;
+        const form = document.getElementById("form");
+        const btn = document.getElementById("btn");
+        const errorDiv = document.getElementById("error");
+        const loadingDiv = document.getElementById("loading");
+        const resultsDiv = document.getElementById("results");
+        const statsBanner = document.getElementById("stats-banner");
+        const topList = document.getElementById("top-list");
+        const btnSkip = document.getElementById("btn-skip");
+        const btnClose = document.getElementById("btn-close-results");
+        const breakdownDiv = document.getElementById("breakdown");
+        const categoriesDiv = document.getElementById("categories");
+
+        let animationAborted = false;
+
+        function sleep(ms) {
+            return new Promise(r => setTimeout(r, ms));
+        }
+
+        async function showLoading() {
+            loadingDiv.style.display = "block";
+            const lines = loadingDiv.querySelectorAll(".loading-line");
+            for (const line of lines) {
+                line.classList.add("visible");
+                await sleep(200);
+            }
+        }
+
+        function hideLoading() {
+            loadingDiv.style.display = "none";
+            const lines = loadingDiv.querySelectorAll(".loading-line");
+            for (const line of lines) {
+                line.classList.remove("visible");
+            }
+        }
+
+        async function typePassword(container, index, entry) {
+            const div = document.createElement("div");
+            div.className = "top-entry";
+            const num = String(index + 1).padStart(3, "0");
+            const pctStr = (entry.probability * 100).toFixed(2) + "%";
+            const text = entry.password;
+            div.textContent = `[${num}] `;
+            container.appendChild(div);
+            const rect = container.getBoundingClientRect();
+            if (rect.bottom < window.innerHeight + 200) {
+                div.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+
+            for (let i = 0; i < text.length; i++) {
+                if (animationAborted) {
+                    div.textContent = `[${num}] ${text}`;
+                    const probSpan = document.createElement("span");
+                    probSpan.style.color = "#006b00";
+                    probSpan.textContent = `  ${pctStr}`;
+                    div.appendChild(probSpan);
+                    return;
+                }
+                div.textContent += text[i];
+                await sleep(30);
+            }
+            const probSpan = document.createElement("span");
+            probSpan.style.color = "#006b00";
+            probSpan.textContent = `  ${pctStr}`;
+            div.appendChild(probSpan);
+        }
+
+        // Typewriter effect: reveals each top password character by character,
+        // with a skip button to render the rest instantly.
+        async function animateTopPasswords(entries) {
+            animationAborted = false;
+            topList.innerHTML = "";
+            btnSkip.style.display = "inline-block";
+            requestAnimationFrame(() => btnSkip.classList.add("visible"));
+
+            for (let i = 0; i < entries.length; i++) {
+                if (animationAborted) {
+                    // Render remaining instantly
+                    for (let j = i; j < entries.length; j++) {
+                        const div = document.createElement("div");
+                        div.className = "top-entry";
+                        const num = String(j + 1).padStart(3, "0");
+                        const pctStr = (entries[j].probability * 100).toFixed(2) + "%";
+                        div.textContent = `[${num}] ${entries[j].password}`;
+                        const probSpan = document.createElement("span");
+                        probSpan.style.color = "#006b00";
+                        probSpan.textContent = `  ${pctStr}`;
+                        div.appendChild(probSpan);
+                        topList.appendChild(div);
+                    }
+                    break;
+                }
+                await typePassword(topList, i, entries[i]);
+                if (!animationAborted) await sleep(25);
+            }
+
+            btnSkip.classList.remove("visible");
+            setTimeout(() => { btnSkip.style.display = "none"; }, 300);
+        }
+
+        function buildBreakdownChart(categories, total) {
+            const BAR_WIDTH = 16;
+            let lines = ["> BREAKDOWN"];
+
+            const order = ["name_based", "leet_speak", "name_dob", "dob_name", "dob_only"];
+            for (const key of order) {
+                const cat = categories[key];
+                if (!cat) continue;
+                const pct = total > 0 ? (cat.count / total) * 100 : 0;
+                const filled = Math.round((pct / 100) * BAR_WIDTH);
+                const bar = "=".repeat(filled) + " ".repeat(BAR_WIDTH - filled);
+                const label = (cat.label + ":").padEnd(16);
+                const countStr = String(cat.count).padStart(6);
+                const pctStr = (Math.round(pct) + "%").padStart(4);
+                lines.push(`  ${label}${countStr}  [${bar}] ${pctStr}`);
+            }
+
+            return lines.join("\n");
+        }
+
+        // Build a collapsible <details> block for one password category,
+        // with paginated password list and a "load more" button.
+        function buildCategorySection(key, cat) {
+            const details = document.createElement("details");
+            const summary = document.createElement("summary");
+            summary.textContent = `${cat.label} (${cat.count.toLocaleString()} passwords)`;
+            details.appendChild(summary);
+
+            const desc = document.createElement("div");
+            desc.className = "cat-desc";
+            desc.textContent = cat.description;
+            details.appendChild(desc);
+
+            const pwDiv = document.createElement("div");
+            pwDiv.className = "cat-passwords";
+
+            let shown = 0;
+            function loadPage() {
+                const end = Math.min(shown + PAGE_SIZE, cat.passwords.length);
+                for (let i = shown; i < end; i++) {
+                    const d = document.createElement("div");
+                    d.textContent = cat.passwords[i];
+                    pwDiv.appendChild(d);
+                }
+                shown = end;
+
+                // Remove existing load-more button if any
+                const existing = pwDiv.querySelector(".btn-load-more");
+                if (existing) existing.remove();
+
+                if (shown < cat.passwords.length) {
+                    const loadMore = document.createElement("button");
+                    loadMore.className = "btn-load-more";
+                    loadMore.textContent = `[ LOAD MORE - ${(cat.passwords.length - shown).toLocaleString()} remaining ]`;
+                    loadMore.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        loadPage();
+                    });
+                    pwDiv.appendChild(loadMore);
+                }
+            }
+
+            loadPage();
+            details.appendChild(pwDiv);
+            return details;
+        }
+
+        btnSkip.addEventListener("click", () => {
+            animationAborted = true;
+        });
+
+        btnClose.addEventListener("click", () => {
+            resultsDiv.style.display = "none";
+            btnClose.style.display = "none";
+            form.reset();
+            window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+
+        document.querySelectorAll(".template-card").forEach(card => {
+            card.addEventListener("click", () => {
+                document.getElementById("first_name").value = card.dataset.first;
+                document.getElementById("last_name").value = card.dataset.last;
+                document.getElementById("dob").value = card.dataset.dob;
+                document.getElementById("pet_name").value = card.dataset.pet;
+            });
+        });
+
+        // Generate flow: run PCFG engine client-side, render stats and breakdown
+        // chart, build collapsible category sections, then animate the top-30 list.
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            errorDiv.style.display = "none";
+            resultsDiv.style.display = "none";
+            btnClose.style.display = "none";
+            btn.disabled = true;
+            btn.textContent = "[ GENERATING... ]";
+
+            const firstName = document.getElementById("first_name").value.trim();
+            const lastName = document.getElementById("last_name").value.trim();
+            const dob = document.getElementById("dob").value.trim();
+            const pet = document.getElementById("pet_name").value.trim();
+
+            showLoading();
+
+            try {
+                // Run PCFG engine locally — no server call needed
+                const data = generatePasswords(firstName, lastName, dob, pet || null);
+
+                // Let the loading animation play out before showing results
+                await sleep(800);
+                hideLoading();
+
+                // Stats banner
+                const sep = "=".repeat(52);
+                statsBanner.innerHTML = `${sep}<br>[COMPLETE] <span class="count-highlight">${data.total_count.toLocaleString()}</span> targeted passwords in ${data.elapsed_seconds}s<br>${sep}`;
+
+                // Breakdown chart
+                breakdownDiv.textContent = buildBreakdownChart(data.categories, data.total_count);
+
+                // Category sections
+                categoriesDiv.innerHTML = "";
+                const order = ["name_based", "leet_speak", "name_dob", "dob_name", "dob_only"];
+                for (const key of order) {
+                    if (data.categories[key] && data.categories[key].count > 0) {
+                        categoriesDiv.appendChild(buildCategorySection(key, data.categories[key]));
+                    }
+                }
+
+                resultsDiv.style.display = "block";
+                statsBanner.scrollIntoView({ behavior: "smooth", block: "start" });
+
+                // Wait for smooth scroll to settle before starting password animation
+                await new Promise(r => setTimeout(r, 600));
+
+                // Animate top 30 last so user sees everything else first
+                document.getElementById("takeaway").style.display = "none";
+                await animateTopPasswords(data.top_passwords);
+                document.getElementById("takeaway").style.display = "block";
+                btnClose.style.display = "block";
+
+            } catch (err) {
+                hideLoading();
+                errorDiv.textContent = "> ERROR: " + err.message;
+                errorDiv.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "[ GENERATE ]";
+            }
+        });
+    </script>
+</body>
+</html>

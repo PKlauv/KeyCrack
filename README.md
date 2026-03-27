@@ -2,17 +2,15 @@
 
 [![CI](https://github.com/PKlauv/KeyCrack/actions/workflows/ci.yml/badge.svg)](https://github.com/PKlauv/KeyCrack/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Docker](https://img.shields.io/badge/Docker-containerized-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![JavaScript](https://img.shields.io/badge/JavaScript-client--side-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-deployed-222?logo=github&logoColor=white)](https://pklauvstad.github.io/KeyCrack/)
 [![Ruff](https://img.shields.io/badge/linter-Ruff-D7FF64?logo=ruff&logoColor=black)](https://docs.astral.sh/ruff/)
 [![pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?logo=pytest&logoColor=white)](https://docs.pytest.org/)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3FCF8E?logo=supabase&logoColor=white)](https://supabase.com/)
-[![Render](https://img.shields.io/badge/Render-deployed-46E3B7?logo=render&logoColor=white)](https://render.com/)
 [![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-A password awareness tool that shows how predictable your passwords might be. Enter personal info (name, DOB, pet name), and KeyCrack uses a probabilistic context-free grammar (PCFG) to generate the most likely password candidates -- each ranked by probability. Educational and portfolio project -- nothing is stored.
+A password awareness tool that shows how predictable your passwords might be. Enter personal info (name, DOB, pet name), and KeyCrack uses a probabilistic context-free grammar (PCFG) to generate the most likely password candidates -- each ranked by probability. Runs entirely in your browser -- nothing is stored, no server needed.
 
-**Live demo:** [keycrack.onrender.com](https://keycrack-b419.onrender.com) -- *(might take a few seconds to spin up)*
+**Live demo:** [pklauvstad.github.io/KeyCrack](https://pklauvstad.github.io/KeyCrack/)
 
 > **Tip:** The UI is hacker-themed -- matrix rain, scanlines, green-on-black. Try one of the 6 sample personas for an instant demo.
 
@@ -35,12 +33,12 @@ KeyCrack uses a **probabilistic context-free grammar (PCFG)** to model how peopl
 ## :sparkles: Features
 
 - **PCFG generation engine** -- 30 templates, probability-ranked, diversity-capped top 30
+- **100% client-side** -- All generation runs in your browser via JavaScript, no server calls
+- **Instant loading** -- Static site hosted on GitHub Pages, no cold starts
 - **Hacker-themed UI** -- Matrix rain canvas, scanline overlay, monospace fonts, green-on-black
 - **Typing animation** -- Passwords appear character by character with probability scores
 - **Sample personas** -- 6 quick-fill buttons to demo generation instantly
-- **Bug reporting** -- `/report-bug` with 4 categories, optional email for follow-up
-- **Admin dashboard** -- HTTP Basic Auth protected at `/admin/bugs`
-- **Privacy-first** -- Password input never stored, only bug reports persist
+- **Privacy-first** -- Nothing leaves your browser, no data stored anywhere
 
 ---
 
@@ -48,60 +46,46 @@ KeyCrack uses a **probabilistic context-free grammar (PCFG)** to model how peopl
 
 | Category | Technology |
 |---|---|
-| **Backend** | Python 3.12 + FastAPI |
+| **Engine** | JavaScript (client-side PCFG algorithm) |
 | **Frontend** | HTML, CSS, JavaScript (vanilla, no frameworks) |
-| **Database** | Supabase (PostgreSQL) / SQLite fallback |
-| **DB Drivers** | asyncpg + aiosqlite |
-| **Testing** | pytest (74 tests) |
+| **Reference impl.** | Python 3.12 (original algorithm) |
+| **Testing** | pytest (Python) + Node.js assert (JS) |
 | **Linting** | Ruff |
-| **Containerization** | Docker + docker-compose |
 | **CI/CD** | GitHub Actions |
-| **Hosting** | Render |
+| **Hosting** | GitHub Pages |
 
 ---
 
 ## :lock: Security & Privacy
 
-KeyCrack is designed so that password generation input never persists anywhere:
+KeyCrack runs entirely in your browser -- no data ever leaves your machine:
 
-- Password generation is entirely in-memory -- input is discarded after the response
-- The only data stored in the database is user-submitted bug reports (category, description, optional email)
-- No logging of request bodies or user input (uvicorn only logs method/path/status)
-- No third-party scripts, analytics, tracking pixels, or CDN dependencies on the frontend
-- No localStorage, cookies, or sessionStorage
-- The only network calls are relative fetches to `/generate` and `/report-bug` -- no data leaves the origin
-- No Docker volumes -- container logs are ephemeral
-- Input is sanitized (`strip_to_alpha`) and validated (Pydantic + `validate_dob`) before processing
+- All password generation happens client-side in JavaScript -- no server, no network calls
+- No database, no logging, no analytics, no tracking
+- No third-party scripts, CDN dependencies, localStorage, cookies, or sessionStorage
+- Input is sanitized (`stripToAlpha`) and validated (`validateDob`) before processing
+- The site is two static files (`index.html` + `pcfg.js`) -- nothing else
 
 ---
 
 ## :open_file_folder: Project Structure
 
 ```
-keycrack/
-├── __init__.py
-├── generator.py          # Original generator (MVP 0)
-├── pcfg.py               # PCFG engine, templates, probability math
+docs/                        # Static site (GitHub Pages)
+├── index.html               # Main UI with matrix rain + typing animation
+└── pcfg.js                  # Client-side PCFG engine (JS port)
+keycrack/                    # Python reference implementation
+├── generator.py             # Data types, validation, leet speak
+├── pcfg.py                  # PCFG engine, templates, probability math
 └── web/
-    ├── __init__.py
-    ├── app.py             # FastAPI routes and lifespan
-    ├── db.py              # Async DB layer (Supabase / SQLite)
-    └── static/
-        ├── index.html     # Main UI with matrix rain + typing animation
-        ├── report-bug.html
-        └── admin-bugs.html
+    ├── app.py               # FastAPI routes (legacy server version)
+    └── static/index.html    # Original server-rendered UI
 tests/
-├── test_api.py            # API endpoint tests
-├── test_bugs.py           # Bug reporting + admin tests
-├── test_generator.py      # Original generator tests
-└── test_pcfg.py           # PCFG engine + probability tests
-Dockerfile
-docker-compose.yml
-run_web.py                 # Entry point for local dev
-pyproject.toml
-requirements.txt
-requirements-dev.txt
-render.yaml                # Render deployment config
+├── test_pcfg.mjs            # JS engine tests (Node.js assert)
+├── test_pcfg.py             # Python PCFG tests (pytest)
+├── test_generator.py        # Python generator tests
+├── test_api.py              # Python API tests
+└── test_bugs.py             # Python bug reporting tests
 ```
 
 ---
@@ -158,7 +142,9 @@ render.yaml                # Render deployment config
 
 KeyCrack started as a terminal-only proof of concept -- type in a name and DOB, get a list of likely passwords printed to stdout.
 
-From there it grew through many stages: the basic generator was replaced with a full **PCFG engine** (30 templates, probability ranking, diversity capping). Then came the **FastAPI web app** with a hacker-themed UI featuring matrix rain and typing animations. **Bug reporting** and an **admin dashboard** followed, backed by Supabase in production with SQLite fallback for local dev. Finally, **Docker containerization**, a **GitHub Actions CI pipeline**, and **Render deployment** brought it to production.
+From there it grew through many stages: the basic generator was replaced with a full **PCFG engine** (30 templates, probability ranking, diversity capping). Then came a **FastAPI web app** with a hacker-themed UI featuring matrix rain and typing animations, hosted on Render with Supabase for bug reports.
+
+Most recently, the PCFG algorithm was **ported to JavaScript** to run entirely client-side. The site is now hosted on **GitHub Pages** as a static site -- instant loading, no server, no cold starts. The Python code remains as the reference implementation.
 
 ---
 

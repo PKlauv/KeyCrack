@@ -1,4 +1,4 @@
-# Lint with Ruff then run the full pytest suite on every push/PR to main.
+# Lint with Ruff, run Python tests, and run JS tests on every push/PR to main.
 name: CI
 
 on:
@@ -19,11 +19,19 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
       - name: Lint with Ruff
         run: ruff check .
 
-      - name: Run tests
+      - name: Run Python tests
         run: python -m pytest tests/ -v
+
+      - name: Run JS tests
+        run: node tests/test_pcfg.mjs

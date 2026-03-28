@@ -13,7 +13,7 @@ A password awareness tool that shows how predictable your passwords might be. En
 
 ---
 
-## :brain: How It Works
+## How It Works
 
 KeyCrack uses a **probabilistic context-free grammar (PCFG)** to model how people build passwords from personal information:
 
@@ -27,7 +27,7 @@ KeyCrack uses a **probabilistic context-free grammar (PCFG)** to model how peopl
 
 ---
 
-## :sparkles: Features
+## Features
 
 - **PCFG generation engine** -- 30 templates, probability-ranked, diversity-capped top 30
 - **100% client-side** -- All generation runs in your browser via JavaScript, no server calls
@@ -39,7 +39,7 @@ KeyCrack uses a **probabilistic context-free grammar (PCFG)** to model how peopl
 
 ---
 
-## :hammer_and_wrench: Built With
+## Built With
 
 | Category | Technology |
 |---|---|
@@ -51,7 +51,7 @@ KeyCrack uses a **probabilistic context-free grammar (PCFG)** to model how peopl
 
 ---
 
-## :lock: Security & Privacy
+## Security & Privacy
 
 KeyCrack runs entirely in your browser -- no data ever leaves your machine:
 
@@ -63,7 +63,7 @@ KeyCrack runs entirely in your browser -- no data ever leaves your machine:
 
 ---
 
-## :open_file_folder: Project Structure
+## Project Structure
 
 ```
 docs/                        # Static site (GitHub Pages)
@@ -78,7 +78,7 @@ tests/
 
 ---
 
-## :brain: What I Learned
+## What I Learned
 
 <details>
 <summary><strong>Algorithms</strong></summary>
@@ -116,7 +116,7 @@ tests/
 
 ---
 
-## :seedling: How This Project Evolved
+## How This Project Evolved
 
 KeyCrack started as a terminal-only proof of concept -- type in a name and DOB, get a list of likely passwords printed to stdout.
 
@@ -128,10 +128,10 @@ Building the Docker/FastAPI version was a great learning experience though -- wo
 
 ---
 
-## :page_facing_up: License
+## License
 
 This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-#### Made by PK Lauvstad (w/AI assistance)
+#### Made by: PK Lauvstad

@@ -1,16 +1,3 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.pyc
-
-# Environment
-.env
-.venv/
-env/
-venv/
-
 # IDEs/editors
 .vscode/
 .idea/
@@ -20,37 +7,13 @@ venv/
 .DS_Store
 Thumbs.db
 
-# Docker
-*.log
-docker-compose.override.yml
-
-# Test/output
-*.coverage
-htmlcov/
+# Logs
 *.log
 
-# Static files
-keycrack/web/__pycache__/
-keycrack/__pycache__/
-
-startingplan.txt
-CLAUDE.md
-.claude
-inspiration/
-# Pytest
-.pytest_cache/
-
-# mypy
-.mypy_cache/
-
-# SQLite
-*.sqlite3
-
-# Python debugger
-*.pdb
-
-# Extra env files
+# Environment
+.env
 *.env
 
-# Bug report database
-data/
+# Misc
+startingplan.txt
+inspiration/

@@ -1,4 +1,4 @@
-# Lint with Ruff, run Python tests, and run JS tests on every push/PR to main.
+# Run JS tests on every push/PR to main.
 name: CI
 
 on:
@@ -8,30 +8,16 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-test:
+  test:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
-
-      - name: Lint with Ruff
-        run: ruff check .
-
-      - name: Run Python tests
-        run: python -m pytest tests/ -v
 
       - name: Run JS tests
         run: node tests/test_pcfg.mjs

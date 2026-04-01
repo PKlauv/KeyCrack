@@ -9,6 +9,8 @@ A password awareness tool that shows how predictable your passwords might be. En
 
 **Live demo:** [pklauv.github.io/KeyCrack](https://pklauv.github.io/KeyCrack/)
 
+![Demo for KeyCrack](assets/demo.gif)
+
 > **Tip:** The UI is hacker-themed -- matrix rain, scanlines, green-on-black. Try one of the 6 sample personas for an instant demo.
 
 ---

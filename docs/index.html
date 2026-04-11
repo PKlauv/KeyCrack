@@ -879,19 +879,6 @@
             }
         });
     </script>
-<script>
-if (location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
-  fetch("https://fdtsktbzshndnwiububp.supabase.co/rest/v1/page_views", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkdHNrdGJ6c2huZG53aXVidWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzYwNDIsImV4cCI6MjA4NzMxMjA0Mn0.p1QU_Krf76umAu92xZDfnYHmnXIOqCpn7k3s_EgbpP4",
-      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkdHNrdGJ6c2huZG53aXVidWJwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3MzYwNDIsImV4cCI6MjA4NzMxMjA0Mn0.p1QU_Krf76umAu92xZDfnYHmnXIOqCpn7k3s_EgbpP4",
-      "Prefer": "return=minimal"
-    },
-    body: JSON.stringify({ site: "keycrack", path: location.pathname, referrer: document.referrer || null })
-  });
-}
-</script>
+<script defer src="https://pklauv.vercel.app/track.js"></script>
 </body>
 </html>
